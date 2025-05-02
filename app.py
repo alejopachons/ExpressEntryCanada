@@ -19,11 +19,18 @@ df = df.sort_values("Fecha")
 
 # Sidebar
 st.sidebar.header("Filtros")
-tipo_ronda = st.sidebar.multiselect(
-    "Selecciona el tipo de ronda",
-    options=df["Tipo de Ronda"].unique(),
-    default=df["Tipo de Ronda"].unique()
-)
+
+# Obtener tipos únicos
+tipos_unicos = df["Tipo de Ronda"].unique()
+
+# Crear un diccionario de checkboxes
+selecciones = {}
+for tipo in tipos_unicos:
+    selecciones[tipo] = st.sidebar.checkbox(tipo, value=True)
+
+# Filtrar según los checkboxes seleccionados
+tipos_seleccionados = [tipo for tipo, seleccionado in selecciones.items() if seleccionado]
+df_filtrado = df[df["Tipo de Ronda"].isin(tipos_seleccionados)]
 
 # Filtrar datos
 df_filtrado = df[df["Tipo de Ronda"].isin(tipo_ronda)]
