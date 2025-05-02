@@ -32,7 +32,7 @@ for tipo in tipos_unicos:
 tipos_seleccionados = [tipo for tipo, seleccionado in selecciones.items() if seleccionado]
 df_filtrado = df[df["Tipo de Ronda"].isin(tipos_seleccionados)]
 
-st.title("Histórico de Invitaciones Express Entry (Canadá)")
+st.title("Invitaciones Express Entry (Canadá)")
 
 # Gráfico 1: Invitaciones por fecha
 fig1 = px.line(df_filtrado, x="Fecha", y="Invitaciones", color="Tipo de Ronda",
