@@ -73,7 +73,7 @@ fig.update_layout(
         side="right"
     ),
     legend=dict(orientation="h"),
-    height=400
+    # height=400
 )
 
 st.plotly_chart(fig, use_container_width=True)
