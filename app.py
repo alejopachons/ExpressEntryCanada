@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.express as px
 
 # Cargar datos
-df = pd.read_excel("Canada.xlsx", sheet_name="Hoja1")
+df = pd.read_csv("Canada.csv", sep=";")
 
 # Limpiar datos
 df = df.rename(columns={
