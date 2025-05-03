@@ -35,7 +35,7 @@ df_filtrado = df[df["Tipo de Ronda"].isin(tipos_seleccionados)]
 st.title("Invitaciones Express Entry (Canadá)")
 
 # Gráfico 1: Invitaciones por fecha
-fig1 = px.line(df_filtrado, x="Fecha", y="Invitaciones", color="Tipo de Ronda",
+fig1 = px.bar(df_filtrado, x="Fecha", y="Invitaciones", color="Tipo de Ronda",
                title="Invitaciones emitidas a lo largo del tiempo")
 fig1.update_layout(height=300)
 st.plotly_chart(fig1, use_container_width=True)
