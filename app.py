@@ -21,7 +21,7 @@ df = df.sort_values("Fecha")
 st.sidebar.header("Filtros")
 
 # Obtener tipos únicos
-tipos_unicos = df["Tipo de Ronda"].unique().sort_values()
+tipos_unicos = df["Tipo de Ronda"].sort_values().unique()
 
 # Crear un diccionario de checkboxes
 selecciones = {}
