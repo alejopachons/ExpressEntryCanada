@@ -20,6 +20,11 @@ df = df.sort_values("Fecha")
 
 # Sidebar
 
+page_names_to_funcs = {
+    "—": Express Entry,
+    "MPNP": MPNP
+}
+
 program = st.sidebar.selectbox("Choose a program", page_names_to_funcs.keys())
 page_names_to_funcs[program]()
 
