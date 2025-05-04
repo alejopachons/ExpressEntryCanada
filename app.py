@@ -49,11 +49,11 @@ años_seleccionados = [año for año, seleccionado in selecciones_año.items() i
 df_filtrado = df_filtrado[df_filtrado["Fecha"].dt.year.isin(años_seleccionados)]
 
 
-st.title("Express Entry Invitations (Canada)")
+st.title("Invitaciones Express Entry (Canadá)")
 
 # Add link
 st.markdown(
-    "Invitations for PR under EES [Oficial web site](https://www.canada.ca/en/immigration-refugees-citizenship/corporate/mandate/policies-operational-instructions-agreements/ministerial-instructions/express-entry-rounds.html#wb-auto-4).",
+    "Puedes encontrar más detalles en el [sitio web oficial](https://www.canada.ca/en/immigration-refugees-citizenship/corporate/mandate/policies-operational-instructions-agreements/ministerial-instructions/express-entry-rounds.html#wb-auto-4).",
     unsafe_allow_html=True
 )
 
@@ -67,18 +67,33 @@ col2.metric(
 # Gráfico 1: Invitaciones por fecha
 fig1 = px.line(df_filtrado, x="Fecha", y="Invitaciones", color="Tipo de Ronda",
                title="Invitaciones emitidas a lo largo del tiempo", markers=True)
+
+# Add reference line input
+ref_value1 = st.sidebar.number_input("Línea de referencia Invitaciones", value=None, placeholder="Ingrese un valor")
+
+if ref_value1 is not None:
+    fig1.add_hline(y=ref_value1, line_dash="dash", color="red", annotation_text=f"Ref: {ref_value1}", annotation_position="top right")
+
 fig1.update_layout(
-    height=300
+    height=500  # Increased height for better visibility
 )
 st.plotly_chart(fig1, use_container_width=True)
 
 # Gráfico 2: CRS mínimo por fecha
 fig2 = px.line(df_filtrado, x="Fecha", y="CRS mínimo", color="Tipo de Ronda",
                title="Puntaje CRS mínimo por ronda", markers=True)
+
+# Add reference line input
+ref_value2 = st.sidebar.number_input("Línea de referencia CRS", value=None, placeholder="Ingrese un valor")
+
+if ref_value2 is not None:
+    fig2.add_hline(y=ref_value2, line_dash="dash", color="red", annotation_text=f"Ref: {ref_value2}", annotation_position="top right")
+
 fig2.update_layout(
-        height=300
+    height=500 # Increased height
 )
 st.plotly_chart(fig2, use_container_width=True)
+
 
 # Mostrar tabla opcional
 with st.expander("Ver tabla de datos"):
