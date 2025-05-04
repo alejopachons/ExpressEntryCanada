@@ -53,16 +53,6 @@ st.sidebar.header("My score")
 # Add reference line input
 ref_value2 = st.sidebar.number_input("Línea de referencia CRS", value=None, placeholder="Ingrese un valor")
 
-# Check if ref_value2 is a valid number, and add hline only if it is
-if ref_value2 is not None:
-    try:
-        num_value = float(ref_value2)  # Try converting to float
-        if not pd.isna(num_value):  # Check for NaN after conversion
-            fig2.add_hline(y=num_value, line_dash="dash", line_color="red", annotation_text=f"My score: {num_value}", annotation_position="top right")
-    except (ValueError, TypeError) as e:
-        st.sidebar.warning(f"Invalid input '{ref_value2}' for reference line. Please enter a number. Error: {e}")
-
-
 st.title("Express Entry Invitations (Canada )")
 
 # Add link
@@ -93,6 +83,16 @@ fig1 = px.line(df_filtrado, x="Fecha", y="Invitaciones", color="Tipo de Ronda",
 fig1.update_layout(
     height=300
 )
+
+# Check if ref_value2 is a valid number, and add hline only if it is
+if ref_value2 is not None:
+    try:
+        num_value = float(ref_value2)  # Try converting to float
+        if not pd.isna(num_value):  # Check for NaN after conversion
+            fig2.add_hline(y=num_value, line_dash="dash", line_color="red", annotation_text=f"My score: {num_value}", annotation_position="top right")
+    except (ValueError, TypeError) as e:
+        st.sidebar.warning(f"Invalid input '{ref_value2}' for reference line. Please enter a number. Error: {e}")
+
 st.plotly_chart(fig1, use_container_width=True)
 
 
