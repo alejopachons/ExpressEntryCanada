@@ -18,7 +18,10 @@ df["Fecha"] = pd.to_datetime(df["Fecha"])
 df = df.sort_values("Fecha")
 
 # Sidebar
-st.sidebar.header("Filtros")
+# st.sidebar.header("Filtros")
+
+
+st.title("Invitaciones Express Entry (Canadá)")
 
 # Obtener tipos únicos
 tipos_unicos = df["Tipo de Ronda"].sort_values().unique()
@@ -32,20 +35,11 @@ for tipo in tipos_unicos:
 tipos_seleccionados = [tipo for tipo, seleccionado in selecciones.items() if seleccionado]
 df_filtrado = df[df["Tipo de Ronda"].isin(tipos_seleccionados)]
 
-st.title("Invitaciones Express Entry (Canadá)")
-
 # Gráfico 1: Invitaciones por fecha
 fig1 = px.line(df_filtrado, x="Fecha", y="Invitaciones", color="Tipo de Ronda",
                title="Invitaciones emitidas a lo largo del tiempo", markers=True)
 fig1.update_layout(
-    height=300,
-    legend=dict(
-        orientation="h",          # horizontal
-        yanchor="bottom",         # anclar por la parte inferior
-        y=-0.3,                   # mover hacia abajo (ajusta según necesites)
-        xanchor="center",
-        x=0.5                     # centrar en el eje X
-    )
+    height=300
 )
 st.plotly_chart(fig1, use_container_width=True)
 
@@ -53,14 +47,7 @@ st.plotly_chart(fig1, use_container_width=True)
 fig2 = px.line(df_filtrado, x="Fecha", y="CRS mínimo", color="Tipo de Ronda",
                title="Puntaje CRS mínimo por ronda", markers=True)
 fig2.update_layout(
-        height=300,
-        legend=dict(
-            orientation="h",          # horizontal
-            yanchor="bottom",         # anclar por la parte inferior
-            y=-0.3,                   # mover hacia abajo (ajusta según necesites)
-            xanchor="center",
-            x=0.5                     # centrar en el eje X
-    )
+        height=300
 )
 st.plotly_chart(fig2, use_container_width=True)
 
