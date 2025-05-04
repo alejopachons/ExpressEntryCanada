@@ -19,6 +19,10 @@ df["Fecha"] = pd.to_datetime(df["Fecha"])
 df = df.sort_values("Fecha")
 
 # Sidebar
+
+program = st.sidebar.selectbox("Choose a program", page_names_to_funcs.keys())
+page_names_to_funcs[program]()
+
 st.sidebar.title("Filtros")
 st.sidebar.header("Tipo de Ronda")
 
