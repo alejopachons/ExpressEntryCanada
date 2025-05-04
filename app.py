@@ -40,7 +40,10 @@ st.title("Invitaciones Express Entry (Canadá)")
 
 col1, col2 = st.columns(2)
 col1.metric("Invitaciones", "{:,}".format(df_filtrado["Invitaciones"].sum()))
-col2.metric("Avg. CRS score", round(df_filtrado["CRS mínimo"].mean(),0))
+col2.metric(
+    "Avg. CRS score",
+    0 if pd.isna(df_filtrado["CRS mínimo"].mean()) else round(df_filtrado["CRS mínimo"].mean(), 0),
+)
 
 # Gráfico 1: Invitaciones por fecha
 fig1 = px.line(df_filtrado, x="Fecha", y="Invitaciones", color="Tipo de Ronda",
