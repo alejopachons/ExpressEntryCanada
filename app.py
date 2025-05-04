@@ -20,7 +20,8 @@ df["Fecha"] = pd.to_datetime(df["Fecha"])
 df = df.sort_values("Fecha")
 
 # Sidebar
-st.sidebar.header("Filtros")
+st.sidebar.title("Filtros")
+st.sidebar.header("Round Type")
 
 # Obtener tipos únicos
 tipos_unicos = df["Tipo de Ronda"].sort_values().unique()
@@ -33,6 +34,20 @@ for tipo in tipos_unicos:
 # Filtrar según los checkboxes seleccionados
 tipos_seleccionados = [tipo for tipo, seleccionado in selecciones.items() if seleccionado]
 df_filtrado = df[df["Tipo de Ronda"].isin(tipos_seleccionados)]
+
+st.sidebar.header("Year")
+
+# Obtener años
+fechas = df["Fecha"].dt.year.sort_values().unique()
+
+# Crear un diccionario de checkboxes
+selecciones_fecha = {}
+for fecha in fechas:
+    selecciones_fecha[fecha] = st.sidebar.checkbox(tipo, value=True)
+
+# Filtrar según los checkboxes seleccionados
+fechas_seleccionadas = [fecha for fecha, seleccionado in selecciones_fecha.items() if seleccionado]
+df_filtrado = df[df["Fecha"].isin(tipos_seleccionados)]
 
 
 st.title("Invitaciones Express Entry (Canadá)")
