@@ -36,7 +36,7 @@ st.title("Invitaciones Express Entry (Canadá)")
 
 # Gráfico 1: Invitaciones por fecha
 fig1 = px.line(df_filtrado, x="Fecha", y="Invitaciones", color="Tipo de Ronda",
-               title="Invitaciones emitidas a lo largo del tiempo xxx", markers=True)
+               title="Invitaciones emitidas a lo largo del tiempo", markers=True)
 fig1.update_layout(
     height=300,
     legend=dict(
