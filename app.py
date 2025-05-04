@@ -28,7 +28,7 @@ tipos_unicos = df["Tipo de Ronda"].sort_values().unique()
 # Crear un diccionario de checkboxes para los tipos de ronda
 selecciones_tipo = {}
 for tipo in tipos_unicos:
-    selecciones_tipo[tipo] = st.sidebar.checkbox(tipo, value=True,  key=f"tipo_{tipo}")
+    selecciones_tipo[tipo] = st.sidebar.checkbox(tipo, value=False,  key=f"tipo_{tipo}")
 
 # Filtrar según los tipos de ronda seleccionados
 tipos_seleccionados = [tipo for tipo, seleccionado in selecciones_tipo.items() if seleccionado]
