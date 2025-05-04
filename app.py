@@ -47,14 +47,14 @@ for fecha in fechas:
 
 # Filtrar según los checkboxes seleccionados
 fechas_seleccionadas = [fecha for fecha, seleccionado in selecciones_fecha.items() if seleccionado]
-df_filtrado = df[df["Fecha"].isin(tipos_seleccionados)]
+df_filtrado = df[df["Fecha"].isin(fechas_seleccionadas)]
 
 
 st.title("Invitaciones Express Entry (Canadá)")
 
 col1, col2 = st.columns(2)
-col1.metric("Invitations", df["Invitaciones"].sum())
-col2.metric("Avg. CRS score", "9 mph", "-8%")
+col1.metric("Invitations", df_filtrado["Invitaciones"].sum())
+col2.metric("Avg. CRS score", df_filtrado["CRS mínimo"].avg())
 
 # Gráfico 1: Invitaciones por fecha
 fig1 = px.line(df_filtrado, x="Fecha", y="Invitaciones", color="Tipo de Ronda",
