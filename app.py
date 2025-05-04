@@ -21,7 +21,7 @@ df = df.sort_values("Fecha")
 # Sidebar
 
 page_names_to_funcs = {
-    "—": Express Entry,
+    "Express Entry": intro,
     "MPNP": MPNP
 }
 
