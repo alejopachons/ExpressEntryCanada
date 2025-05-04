@@ -1,4 +1,3 @@
-# app.py
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -21,19 +20,33 @@ df = df.sort_values("Fecha")
 
 # Sidebar
 st.sidebar.title("Filtros")
-st.sidebar.header("Round Type")
+st.sidebar.header("Tipo de Ronda")
 
 # Obtener tipos únicos
 tipos_unicos = df["Tipo de Ronda"].sort_values().unique()
 
-# Crear un diccionario de checkboxes
-selecciones = {}
+# Crear un diccionario de checkboxes para los tipos de ronda
+selecciones_tipo = {}
 for tipo in tipos_unicos:
-    selecciones[tipo] = st.sidebar.checkbox(tipo, value=False)
+    selecciones_tipo[tipo] = st.sidebar.checkbox(tipo, value=True,  key=f"tipo_{tipo}")
 
-# Filtrar según los checkboxes seleccionados
-tipos_seleccionados = [tipo for tipo, seleccionado in selecciones.items() if seleccionado]
+# Filtrar según los tipos de ronda seleccionados
+tipos_seleccionados = [tipo for tipo, seleccionado in selecciones_tipo.items() if seleccionado]
 df_filtrado = df[df["Tipo de Ronda"].isin(tipos_seleccionados)]
+
+st.sidebar.header("Año")
+
+# Obtener años únicos
+años_unicos = df["Fecha"].dt.year.sort_values().unique()
+
+# Crear un diccionario de checkboxes para los años
+selecciones_año = {}
+for año in años_unicos:
+    selecciones_año[año] = st.sidebar.checkbox(str(año), value=True, key=f"año_{año}")
+
+# Filtrar según los años seleccionados
+años_seleccionados = [año for año, seleccionado in selecciones_año.items() if seleccionado]
+df_filtrado = df_filtrado[df_filtrado["Fecha"].dt.year.isin(años_seleccionados)]
 
 
 st.title("Invitaciones Express Entry (Canadá)")
