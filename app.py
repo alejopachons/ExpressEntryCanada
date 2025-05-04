@@ -18,10 +18,7 @@ df["Fecha"] = pd.to_datetime(df["Fecha"])
 df = df.sort_values("Fecha")
 
 # Sidebar
-# st.sidebar.header("Filtros")
-
-
-st.title("Invitaciones Express Entry (Canadá)")
+st.sidebar.header("Filtros")
 
 # Obtener tipos únicos
 tipos_unicos = df["Tipo de Ronda"].sort_values().unique()
@@ -29,11 +26,13 @@ tipos_unicos = df["Tipo de Ronda"].sort_values().unique()
 # Crear un diccionario de checkboxes
 selecciones = {}
 for tipo in tipos_unicos:
-    selecciones[tipo] = st.checkbox(tipo, value=False)
+    selecciones[tipo] = st.sidebar.checkbox(tipo, value=False)
 
 # Filtrar según los checkboxes seleccionados
 tipos_seleccionados = [tipo for tipo, seleccionado in selecciones.items() if seleccionado]
 df_filtrado = df[df["Tipo de Ronda"].isin(tipos_seleccionados)]
+
+st.title("Invitaciones Express Entry (Canadá)")
 
 # Gráfico 1: Invitaciones por fecha
 fig1 = px.line(df_filtrado, x="Fecha", y="Invitaciones", color="Tipo de Ronda",
