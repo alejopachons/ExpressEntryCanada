@@ -35,21 +35,6 @@ for tipo in tipos_unicos:
 tipos_seleccionados = [tipo for tipo, seleccionado in selecciones.items() if seleccionado]
 df_filtrado = df[df["Tipo de Ronda"].isin(tipos_seleccionados)]
 
-st.sidebar.header("Year")
-
-# Obtener años
-fechas = df["Fecha"].dt.year.sort_values().unique()
-
-# Crear un diccionario de checkboxes
-selecciones_fecha = {}
-for fecha in fechas:
-    selecciones_fecha[fecha] = st.sidebar.checkbox(fecha, value=True, key=f"fecha_{fecha}")
-
-# Filtrar según los checkboxes seleccionados
-fechas_seleccionadas = [fecha for fecha, seleccionadoY in selecciones_fecha.items() if seleccionadoY]
-df_filtrado = df[df["Fecha"].isin(fechas_seleccionadas)]
-
-
 
 st.title("Invitaciones Express Entry (Canadá)")
 
