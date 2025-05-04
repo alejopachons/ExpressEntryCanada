@@ -49,7 +49,13 @@ años_seleccionados = [año for año, seleccionado in selecciones_año.items() i
 df_filtrado = df_filtrado[df_filtrado["Fecha"].dt.year.isin(años_seleccionados)]
 
 
-st.title("Invitaciones Express Entry (Canadá)")
+st.title("Express Entry Invitations (Canada)")
+
+# Add link
+st.markdown(
+    "Invitations for PR under EES [Oficial web site](https://www.canada.ca/en/immigration-refugees-citizenship/corporate/mandate/policies-operational-instructions-agreements/ministerial-instructions/express-entry-rounds.html#wb-auto-4).",
+    unsafe_allow_html=True
+)
 
 col1, col2 = st.columns(2)
 col1.metric("Invitaciones", "{:,}".format(df_filtrado["Invitaciones"].sum()))
