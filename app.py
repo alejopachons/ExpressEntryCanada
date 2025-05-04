@@ -83,7 +83,7 @@ if ref_value2 is not None:
     try:
         num_value = float(ref_value2)  # Try converting to float
         if not pd.isna(num_value):  # Check for NaN after conversion
-            fig2.add_hline(y=num_value, line_dash="dash", line_color="red", annotation_text=f"Ref: {num_value}", annotation_position="top right")
+            fig2.add_hline(y=num_value, line_dash="dash", line_color="red", annotation_text=f"My score: {num_value}", annotation_position="top right")
     except (ValueError, TypeError) as e:
         st.sidebar.warning(f"Invalid input '{ref_value2}' for reference line. Please enter a number. Error: {e}")
 
