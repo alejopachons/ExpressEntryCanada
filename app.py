@@ -29,7 +29,7 @@ tipos_unicos = df["Tipo de Ronda"].sort_values().unique()
 # Crear un diccionario de checkboxes
 selecciones = {}
 for tipo in tipos_unicos:
-    selecciones[tipo] = st.sidebar.checkbox(tipo, value=False)
+    selecciones[tipo] = st.sidebar.checkbox(tipo, value=False,  key=f"tipo_{tipo}")
 
 # Filtrar según los checkboxes seleccionados
 tipos_seleccionados = [tipo for tipo, seleccionado in selecciones.items() if seleccionado]
@@ -43,7 +43,7 @@ fechas = df["Fecha"].dt.year.sort_values().unique()
 # Crear un diccionario de checkboxes
 selecciones_fecha = {}
 for fecha in fechas:
-    selecciones_fecha[fecha] = st.sidebar.checkbox(tipo, value=True)
+    selecciones_fecha[fecha] = st.sidebar.checkbox(tipo, value=True, key=f"fecha_{fecha}")
 
 # Filtrar según los checkboxes seleccionados
 fechas_seleccionadas = [fecha for fecha, seleccionado in selecciones_fecha.items() if seleccionado]
