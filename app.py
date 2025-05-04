@@ -3,6 +3,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
+st.set_page_config(layout="wide")
+
 # Cargar datos
 df = pd.read_csv("Canada.csv", sep=";")
 
@@ -40,7 +42,7 @@ fig1 = px.line(df_filtrado, x="Fecha", y="Invitaciones", color="Tipo de Ronda",
 fig1.update_layout(
     height=300
 )
-st.plotly_chart(fig1, use_container_width=False)
+st.plotly_chart(fig1, use_container_width=True)
 
 # Gráfico 2: CRS mínimo por fecha
 fig2 = px.line(df_filtrado, x="Fecha", y="CRS mínimo", color="Tipo de Ronda",
