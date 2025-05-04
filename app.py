@@ -78,8 +78,14 @@ fig2 = px.line(df_filtrado, x="Fecha", y="CRS mínimo", color="Tipo de Ronda",
 # Add reference line input
 ref_value2 = st.sidebar.number_input("Línea de referencia CRS", value=None, placeholder="Ingrese un valor")
 
-if ref_value2 is not None and isinstance(ref_value2, (int, float)): # Ensure ref_value2 is a number
-    fig2.add_hline(y=ref_value2, line_dash="dash", color="red", annotation_text=f"Ref: {ref_value2}", annotation_position="top right")
+# Check if ref_value2 is a valid number, and add hline only if it is
+if ref_value2 is not None:
+    try:
+        num_value = float(ref_value2)  # Try converting to float
+        if not pd.isna(num_value):  # Check for NaN after conversion
+            fig2.add_hline(y=num_value, line_dash="dash", color="red", annotation_text=f"Ref: {num_value}", annotation_position="top right")
+    except (ValueError, TypeError):
+        st.sidebar.warning(f"Invalid input '{ref_value2}' for reference line. Please enter a number.")
 
 fig2.update_layout(
     height=300
