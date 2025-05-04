@@ -75,14 +75,6 @@ fig2 = px.line(df_filtrado, x="Fecha", y="CRS mínimo", color="Tipo de Ronda",
 fig2.update_layout(
     height=300
 )
-st.plotly_chart(fig2, use_container_width=True)
-
-# Gráfico 1: Invitaciones por fecha
-fig1 = px.line(df_filtrado, x="Fecha", y="Invitaciones", color="Tipo de Ronda",
-               title="Invitaciones emitidas a lo largo del tiempo", markers=True)
-fig1.update_layout(
-    height=300
-)
 
 # Check if ref_value2 is a valid number, and add hline only if it is
 if ref_value2 is not None:
@@ -92,6 +84,15 @@ if ref_value2 is not None:
             fig2.add_hline(y=num_value, line_dash="dash", line_color="red", annotation_text=f"My score: {num_value}", annotation_position="top right")
     except (ValueError, TypeError) as e:
         st.sidebar.warning(f"Invalid input '{ref_value2}' for reference line. Please enter a number. Error: {e}")
+
+st.plotly_chart(fig2, use_container_width=True)
+
+# Gráfico 1: Invitaciones por fecha
+fig1 = px.line(df_filtrado, x="Fecha", y="Invitaciones", color="Tipo de Ronda",
+               title="Invitaciones emitidas a lo largo del tiempo", markers=True)
+fig1.update_layout(
+    height=300
+)
 
 st.plotly_chart(fig1, use_container_width=True)
 
