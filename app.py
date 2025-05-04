@@ -34,7 +34,12 @@ for tipo in tipos_unicos:
 tipos_seleccionados = [tipo for tipo, seleccionado in selecciones.items() if seleccionado]
 df_filtrado = df[df["Tipo de Ronda"].isin(tipos_seleccionados)]
 
+
 st.title("Invitaciones Express Entry (Canadá)")
+
+col1, col2 = st.columns(2)
+col1.metric("Invitations", df["Invitaciones"].sum)
+col2.metric("Avg. CRS score", "9 mph", "-8%")
 
 # Gráfico 1: Invitaciones por fecha
 fig1 = px.line(df_filtrado, x="Fecha", y="Invitaciones", color="Tipo de Ronda",
