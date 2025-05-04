@@ -43,11 +43,10 @@ fechas = df_filtrado["Fecha"].dt.year.sort_values().unique()
 # Crear un diccionario de checkboxes
 selecciones_fecha = {}
 for fecha in fechas:
-    selecciones_fecha[fecha] = st.sidebar.checkbox(tipo, value=True, key=f"fecha_{fecha}")
+    selecciones_fecha[fecha] = st.sidebar.checkbox(fecha, value=True, key=f"fecha_{fecha}")
 
 # Filtrar según los checkboxes seleccionados
 fechas_seleccionadas = [fecha for fecha, seleccionadoY in selecciones_fecha.items() if seleccionadoY]
-df_filtrado = df[df["Fecha"].isin(fechas_seleccionadas)]
 
 
 st.title("Invitaciones Express Entry (Canadá)")
