@@ -40,7 +40,7 @@ fig1 = px.line(df_filtrado, x="Fecha", y="Invitaciones", color="Tipo de Ronda",
 fig1.update_layout(
     height=300
 )
-st.plotly_chart(fig1, use_container_width=True)
+st.plotly_chart(fig1, use_container_width=False)
 
 # Gráfico 2: CRS mínimo por fecha
 fig2 = px.line(df_filtrado, x="Fecha", y="CRS mínimo", color="Tipo de Ronda",
