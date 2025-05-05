@@ -6,7 +6,7 @@ seleccion = st.sidebar.radio("Ir a:", ["Express Entry", "MPNP"])
 
 # Lógica de navegación
 if seleccion == "Express Entry":
-    from ee import run as run_ee
+    from EE import run as run_ee
     run_ee()
 elif seleccion == "MPNP":
     from MPNP import run as run_mpnp
