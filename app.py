@@ -4,6 +4,11 @@ import plotly.express as px
 
 st.set_page_config(layout="wide", page_title="Express Entry")
 
+MPNP= st.Page("MPNP.py", title="MPNP", icon=":material/add_circle:")
+
+pg = st.navigation([MPNP])
+pg.run()
+
 # Cargar datos
 df = pd.read_csv("Canada.csv", sep=";")
 
