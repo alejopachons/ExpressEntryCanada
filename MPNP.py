@@ -80,7 +80,7 @@ def run():
     )
 
     # Gráfico 1: Puntaje mínimo por fecha
-    fig1 = px.line(df_np_filtrado, x="Fecha", y="Puntaje mínimo", color="Tipo",
+    fig1 = px.line(df_np_filtrado, x="Fecha", y="Puntaje mínimo", color="Subtipo",
                   title="Puntaje mínimo por ronda", markers=True)
     
     # Añadir línea de referencia si existe
@@ -98,7 +98,7 @@ def run():
     st.plotly_chart(fig1, use_container_width=True)
 
     # Gráfico 2: Invitaciones por fecha
-    fig2 = px.line(df_np_filtrado, x="Fecha", y="Invitaciones", color="Tipo",
+    fig2 = px.line(df_np_filtrado, x="Fecha", y="Invitaciones", color="Subtipo",
                   title="Invitaciones emitidas a lo largo del tiempo", markers=True)
     
     fig2.update_layout(height=300)
