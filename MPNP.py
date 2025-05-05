@@ -5,10 +5,10 @@ def run():
     import plotly.express as px
 
     # Cargar datos
-    df = pd.read_csv("MPNP.csv", sep=";")
+    df_np = pd.read_csv("MPNP.csv", sep=";")
 
     # Limpiar datos
-    df = df.rename(columns={
+    df_np = df_np.rename(columns={
         "Fecha": "Fecha",
         "Draw": "Ronda",
         "Tipo": "Tipo",
@@ -17,46 +17,46 @@ def run():
         "Ranking score of lowest-ranked candidate invited": "Puntaje mínimo"
     })
 
-    df["Fecha"] = pd.to_datetime(df["Fecha"], dayfirst=True)
-    df = df.sort_values("Fecha")
+    df_np["Fecha"] = pd.to_datetime(df_np["Fecha"], dayfirst=True)
+    df_np = df_np.sort_values("Fecha")
     
     # Limpiar filas vacías o con datos inválidos
-    df = df.dropna(subset=["Fecha"])
-    df = df[df["Invitaciones"].notna()]
+    df_np = df_np.dropna(subset=["Fecha"])
+    df_np = df_np[df_np["Invitaciones"].notna()]
 
     # Sidebar
     st.sidebar.title("Filtros")
     
     # Filtro por Tipo
     st.sidebar.header("Tipo de Programa")
-    tipos_unicos = df["Tipo"].sort_values().unique()
+    tipos_unicos = df_np["Tipo"].sort_values().unique()
     selecciones_tipo = {}
     for tipo in tipos_unicos:
-        selecciones_tipo[tipo] = st.sidebar.checkbox(tipo, value=True, key=f"tipo_{tipo}")
+        selecciones_tipo[tipo] = st.sidebar.checkbox(tipo, value=False, key=f"tipo_{tipo}")
     
     tipos_seleccionados = [tipo for tipo, seleccionado in selecciones_tipo.items() if seleccionado]
-    df_filtrado = df[df["Tipo"].isin(tipos_seleccionados)]
+    df_np_filtrado = df_np[df_np["Tipo"].isin(tipos_seleccionados)]
 
     # Filtro por Subtipo
     st.sidebar.header("Subtipo")
-    subtipos_unicos = df["Subtipo"].dropna().sort_values().unique()
+    subtipos_unicos = df_np["Subtipo"].dropna().sort_values().unique()
     selecciones_subtipo = {}
     for subtipo in subtipos_unicos:
-        selecciones_subtipo[subtipo] = st.sidebar.checkbox(subtipo, value=True, key=f"subtipo_{subtipo}")
+        selecciones_subtipo[subtipo] = st.sidebar.checkbox(subtipo, value=False, key=f"subtipo_{subtipo}")
     
     subtipos_seleccionados = [subtipo for subtipo, seleccionado in selecciones_subtipo.items() if seleccionado]
     if subtipos_seleccionados:  # Solo filtrar si hay subtipos seleccionados
-        df_filtrado = df_filtrado[df_filtrado["Subtipo"].isin(subtipos_seleccionados) | df_filtrado["Subtipo"].isna()]
+        df_np_filtrado = df_np_filtrado[df_np_filtrado["Subtipo"].isin(subtipos_seleccionados) | df_np_filtrado["Subtipo"].isna()]
 
     # Filtro por Año
     st.sidebar.header("Año")
-    años_unicos = df["Fecha"].dt.year.sort_values().unique()
+    años_unicos = df_np["Fecha"].dt.year.sort_values().unique()
     selecciones_año = {}
     for año in años_unicos:
         selecciones_año[año] = st.sidebar.checkbox(str(año), value=True, key=f"año_{año}")
     
     años_seleccionados = [año for año, seleccionado in selecciones_año.items() if seleccionado]
-    df_filtrado = df_filtrado[df_filtrado["Fecha"].dt.year.isin(años_seleccionados)]
+    df_np_filtrado = df_np_filtrado[df_np_filtrado["Fecha"].dt.year.isin(años_seleccionados)]
 
     # Línea de referencia para el puntaje
     st.sidebar.header("Mi puntaje")
@@ -67,20 +67,20 @@ def run():
 
     # Enlace oficial
     st.markdown(
-        "Official MPNP website [Manitoba Provincial Nominee Program](https://immigratemanitoba.com/)",
+        "Official MPNP website [Manitoba Provincial Nominee Program](https://immigratemanitoba.com/notices/eoi-draw/)",
         unsafe_allow_html=True
     )
 
     # Métricas
     col1, col2 = st.columns(2)
-    col1.metric("Total de invitaciones", "{:,}".format(df_filtrado["Invitaciones"].sum()))
+    col1.metric("Total de invitaciones", "{:,}".format(df_np_filtrado["Invitaciones"].sum()))
     col2.metric(
         "Puntaje mínimo promedio",
-        "N/A" if pd.isna(df_filtrado["Puntaje mínimo"].mean()) else round(df_filtrado["Puntaje mínimo"].mean(), 0),
+        "N/A" if pd.isna(df_np_filtrado["Puntaje mínimo"].mean()) else round(df_np_filtrado["Puntaje mínimo"].mean(), 0),
     )
 
     # Gráfico 1: Puntaje mínimo por fecha
-    fig1 = px.line(df_filtrado, x="Fecha", y="Puntaje mínimo", color="Tipo",
+    fig1 = px.line(df_np_filtrado, x="Fecha", y="Puntaje mínimo", color="Tipo",
                   title="Puntaje mínimo por ronda", markers=True)
     
     # Añadir línea de referencia si existe
@@ -98,7 +98,7 @@ def run():
     st.plotly_chart(fig1, use_container_width=True)
 
     # Gráfico 2: Invitaciones por fecha
-    fig2 = px.line(df_filtrado, x="Fecha", y="Invitaciones", color="Tipo",
+    fig2 = px.line(df_np_filtrado, x="Fecha", y="Invitaciones", color="Tipo",
                   title="Invitaciones emitidas a lo largo del tiempo", markers=True)
     
     fig2.update_layout(height=300)
@@ -106,4 +106,4 @@ def run():
 
     # Mostrar tabla de datos
     with st.expander("Ver tabla de datos"):
-        st.dataframe(df_filtrado)
+        st.dataframe(df_np_filtrado)
