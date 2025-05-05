@@ -4,7 +4,6 @@ def run():
     import time
     import numpy as np
 
-    st.set_page_config(page_title="Plotting Demo", page_icon="📈")
     st.title("Manitoba Provincial Nominee Program")
 
     st.markdown("# Plotting Demo")
