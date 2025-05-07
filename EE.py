@@ -1,9 +1,9 @@
 def run():
+    
     import streamlit as st
     import pandas as pd
     import plotly.express as px
     from datetime import datetime
-
 
 
     # Cargar datos
@@ -17,14 +17,16 @@ def run():
         "CRS score of lowest-ranked candidate invited": "CRS mínimo"
     })
 
-    df["Fecha"] = pd.to_datetime(df["Fecha"])
+    df["Fecha"] = pd.to_datetime(df["Fecha"], dayfirst=True)
     df = df.sort_values("Fecha")
 
     # Sidebar
 
-
     st.sidebar.title("Filtros")
     st.sidebar.header("Tipo de Ronda")
+    
+    # Limpiar filas vacías o con datos inválidos
+    df_np = df_np.dropna(subset=["Fecha"])
 
     # Obtener tipos únicos
     tipos_unicos = df["Tipo de Ronda"].sort_values().unique()
@@ -72,7 +74,6 @@ def run():
         0 if pd.isna(df_filtrado["CRS mínimo"].mean()) else round(df_filtrado["CRS mínimo"].mean(), 0),
     )
     dias_desde_ultimo_sorteo = (datetime.today().date() - df_filtrado["Fecha"].max().date()).days
-
     col3.metric("días desde el último sorteo", dias_desde_ultimo_sorteo)
 
     # Gráfico 2: CRS mínimo por fecha
