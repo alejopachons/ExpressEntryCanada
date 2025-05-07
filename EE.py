@@ -2,6 +2,8 @@ def run():
     import streamlit as st
     import pandas as pd
     import plotly.express as px
+    from datetime import datetime
+
 
 
     # Cargar datos
@@ -63,12 +65,15 @@ def run():
         unsafe_allow_html=True
     )
 
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     col1.metric("Invitaciones", "{:,}".format(df_filtrado["Invitaciones"].sum()))
     col2.metric(
         "Avg. CRS score",
         0 if pd.isna(df_filtrado["CRS mínimo"].mean()) else round(df_filtrado["CRS mínimo"].mean(), 0),
     )
+    dias_desde_ultimo_sorteo = (datetime.today().date() - df_np_filtrado["Fecha"].max().date()).days
+
+    col3.metric("días desde el último sorteo", dias_desde_ultimo_sorteo)
 
     # Gráfico 2: CRS mínimo por fecha
     fig2 = px.line(df_filtrado, x="Fecha", y="CRS mínimo", color="Tipo de Ronda",

@@ -3,6 +3,8 @@ def run():
     import streamlit as st
     import pandas as pd
     import plotly.express as px
+    from datetime import datetime
+
 
     # Cargar datos
     df_np = pd.read_csv("MPNP.csv", sep=";")
@@ -72,12 +74,17 @@ def run():
     )
 
     # Métricas
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     col1.metric("Total de invitaciones", "{:,}".format(df_np_filtrado["Invitaciones"].sum()))
     col2.metric(
         "Puntaje mínimo promedio",
         "N/A" if pd.isna(df_np_filtrado["Puntaje mínimo"].mean()) else round(df_np_filtrado["Puntaje mínimo"].mean(), 0),
     )
+    
+    dias_desde_ultimo_sorteo = (datetime.today().date() - df_np_filtrado["Fecha"].max().date()).days
+
+    col3.metric("días desde el último sorteo", dias_desde_ultimo_sorteo)
+    
 
     # Gráfico 1: Puntaje mínimo por fecha
     fig1 = px.line(df_np_filtrado, x="Fecha", y="Puntaje mínimo", color="Subtipo",
