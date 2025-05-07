@@ -12,8 +12,7 @@ def run():
     # Limpiar datos
     df = df.rename(columns={
         "Date": "Fecha",
-        "Round type": "Tipo de 
-        ",
+        "Round type": "Tipo de Ronda",
         "Invitations issued": "Invitaciones",
         "CRS score of lowest-ranked candidate invited": "CRS mínimo"
     })
