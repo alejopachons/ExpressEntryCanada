@@ -26,7 +26,7 @@ def run():
     st.sidebar.header("Tipo de Ronda")
     
     # Limpiar filas vacías o con datos inválidos
-    df_np = df_np.dropna(subset=["Fecha"])
+    # df_np = df.dropna(subset=["Fecha"])
 
     # Obtener tipos únicos
     tipos_unicos = df["Tipo de Ronda"].sort_values().unique()
