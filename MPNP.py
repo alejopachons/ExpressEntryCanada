@@ -81,8 +81,8 @@ def run():
         "N/A" if pd.isna(df_np_filtrado["Puntaje mínimo"].mean()) else round(df_np_filtrado["Puntaje mínimo"].mean(), 0),
     )
     
-    # dias_desde_ultimo_sorteo_np = (datetime.today().date() - df_np_filtrado["Fecha"].max().date()).days
-    # col3.metric("días desde el último sorteo", dias_desde_ultimo_sorteo_np)
+    dias_desde_ultimo_sorteo_np = (datetime.today().date() - df_np_filtrado["Fecha"].max().date()).days
+    col3.metric("días desde el último sorteo", dias_desde_ultimo_sorteo_np)
     
 
     # Gráfico 1: Puntaje mínimo por fecha
