@@ -17,7 +17,7 @@ def run():
         "CRS score of lowest-ranked candidate invited": "CRS mínimo"
     })
 
-    df["Fecha"] = pd.to_datetime(df["Fecha"], format='%Y-%m-%d')
+    df["Fecha"] = pd.to_datetime(df["Fecha"], format='%d/%m/%Y')
     df = df.sort_values("Fecha")
 
     # Sidebar
