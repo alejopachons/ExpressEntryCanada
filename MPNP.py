@@ -82,7 +82,9 @@ def run():
     )
     
     dias_desde_ultimo_sorteo_np = (datetime.today().date() - df_np_filtrado["Fecha"].max().date()).days
-    col3.metric("días desde el último sorteo", dias_desde_ultimo_sorteo_np)
+    col3.metric("días desde el último sorteo",
+                "N/A" if dias_desde_ultimo_sorteo_np else (datetime.today().date() - df["Fecha"].max().date()).days,
+                )
     
 
     # Gráfico 1: Puntaje mínimo por fecha
