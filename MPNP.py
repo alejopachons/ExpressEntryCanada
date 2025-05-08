@@ -76,9 +76,11 @@ def run():
     # Métricas
     col1, col2, col3 = st.columns(3)
     col1.metric("Total de invitaciones", "{:,}".format(df_np_filtrado["Invitaciones"].sum()))
+    
+    promedio = df_np_filtrado["Puntaje mínimo"].mean()
     col2.metric(
         "Puntaje mínimo promedio",
-        "N/A" if pd.isna(df_np_filtrado["Puntaje mínimo"].mean()) else round(df_np_filtrado["Puntaje mínimo"].mean(), 0),
+        0 if pd.isna(promedio) else round(promedio, 0)
     )
     if not df_np_filtrado["Fecha"].dropna().empty:
         fecha_max = df_np_filtrado["Fecha"].max()
