@@ -74,7 +74,8 @@ def run():
         fecha_max = df_filtrado["Fecha"].max()
         dias = (datetime.today().date() - fecha_max.date()).days
     else:
-        dias = np.nan  # sin paréntesis
+        fecha_max = df["Fecha"].max()
+        dias = (datetime.today().date() - fecha_max.date()).days
     col3.metric("Días desde el último sorteo", dias)
 
     # Gráfico 2: CRS mínimo por fecha
