@@ -70,8 +70,12 @@ def run():
         "Avg. CRS score",
         0 if pd.isna(df_filtrado["CRS mínimo"].mean()) else round(df_filtrado["CRS mínimo"].mean(), 0),
     )
-    # dias_desde_ultimo_sorteo = (datetime.today().date() - df_filtrado["Fecha"].max().date()).days
-    # col3.metric("días desde el último sorteo", dias_desde_ultimo_sorteo)
+    if not df_filtrado["Fecha"].dropna().empty:
+        fecha_max = df_filtrado["Fecha"].max()
+        dias = (datetime.today().date() - fecha_max.date()).days
+    else:
+        dias = np.nan  # sin paréntesis
+    col3.metric("Días desde el último sorteo", dias)
 
     # Gráfico 2: CRS mínimo por fecha
     fig2 = px.line(df_filtrado, x="Fecha", y="CRS mínimo", color="Tipo de Ronda",
