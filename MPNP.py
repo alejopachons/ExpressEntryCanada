@@ -80,7 +80,7 @@ def run():
     promedio = df_np_filtrado["Puntaje mínimo"].mean()
     col2.metric(
         "Puntaje mínimo promedio",
-        0 if pd.isna(promedio) else round(promedio, 0)
+        0 if pd.isna(promedio) else int(promedio)
     )
     if not df_np_filtrado["Fecha"].dropna().empty:
         fecha_max = df_np_filtrado["Fecha"].max()

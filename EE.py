@@ -68,7 +68,7 @@ def run():
     col1.metric("Invitaciones", "{:,}".format(df_filtrado["Invitaciones"].sum()))
     col2.metric(
         "Avg. CRS score",
-        0 if pd.isna(df_filtrado["CRS mínimo"].mean()) else round(df_filtrado["CRS mínimo"].mean(), 0),
+        0 if pd.isna(df_filtrado["CRS mínimo"].mean()) else int(df_filtrado["CRS mínimo"].mean()),
     )
     if not df_filtrado["Fecha"].dropna().empty:
         fecha_max = df_filtrado["Fecha"].max()
