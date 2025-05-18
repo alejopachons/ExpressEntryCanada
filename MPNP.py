@@ -41,7 +41,7 @@ def run():
 
     # Filtro por Subtipo
     st.sidebar.header("Subtipo")
-    subtipos_unicos = df_np["Subtipo"].dropna().sort_values().unique()
+    subtipos_unicos = df_np_filtrado["Subtipo"].dropna().sort_values().unique()
     selecciones_subtipo = {}
     for subtipo in subtipos_unicos:
         selecciones_subtipo[subtipo] = st.sidebar.checkbox(subtipo, value=False, key=f"subtipo_{subtipo}")
@@ -117,5 +117,5 @@ def run():
     st.plotly_chart(fig2, use_container_width=True)
 
     # Mostrar tabla de datos
-    with st.expander("Ver tabla de datos"):
-        st.dataframe(df_np_filtrado)
+    # with st.expander("Ver tabla de datos"):
+    #     st.dataframe(df_np_filtrado)
