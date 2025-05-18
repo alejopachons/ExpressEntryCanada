@@ -4,6 +4,7 @@ def run():
     import pandas as pd
     import numpy as np
     import plotly.express as px
+    import altair as alt
     from datetime import datetime
 
     # Cargar datos
@@ -60,10 +61,6 @@ def run():
     años_seleccionados = [año for año, seleccionado in selecciones_año.items() if seleccionado]
     df_np_filtrado = df_np_filtrado[df_np_filtrado["Fecha"].dt.year.isin(años_seleccionados)]
 
-    # Línea de referencia para el puntaje
-    st.sidebar.header("Mi puntaje")
-    ref_value = st.sidebar.number_input("Línea de referencia", value=None, placeholder="Ingrese su puntaje")
-
     # Contenido principal
     st.title("Manitoba Provincial Nominee Program (MPNP)")
 
@@ -74,7 +71,7 @@ def run():
     )
 
     # Métricas
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     col1.metric("Total de invitaciones", "{:,}".format(df_np_filtrado["Invitaciones"].sum()))
     
     promedio = df_np_filtrado["Puntaje mínimo"].mean()
@@ -90,32 +87,64 @@ def run():
         dias = (datetime.today().date() - fecha_max.date()).days
     col3.metric("Días desde el último sorteo", dias)
     
-
-    # Gráfico 1: Puntaje mínimo por fecha
-    fig1 = px.line(df_np_filtrado, x="Fecha", y="Puntaje mínimo", color="Subtipo",
-                  title="Puntaje mínimo por ronda", markers=True)
+    with col4:
+        ref_value = st.number_input("Mi puntaje", value=None, placeholder="Ingrese un valor", format="%0f")
     
-    # Añadir línea de referencia si existe
-    if ref_value is not None:
-        try:
-            num_value = float(ref_value)
-            if not pd.isna(num_value):
-                fig1.add_hline(y=num_value, line_dash="dash", line_color="red", 
-                              annotation_text=f"Mi puntaje: {num_value}", 
-                              annotation_position="top right")
-        except (ValueError, TypeError):
-            st.sidebar.warning("Por favor ingrese un valor numérico válido")
-
-    fig1.update_layout(height=300)
-    st.plotly_chart(fig1, use_container_width=True)
-
-    # Gráfico 2: Invitaciones por fecha
-    fig2 = px.line(df_np_filtrado, x="Fecha", y="Invitaciones", color="Subtipo",
-                  title="Invitaciones emitidas a lo largo del tiempo", markers=True)
+    gh1, gh2 = st.columns(2)
     
-    fig2.update_layout(height=300)
-    st.plotly_chart(fig2, use_container_width=True)
+    with gh1:
 
+            # Gráfico 1: Puntaje mínimo por fecha
+            fig1 = px.line(df_np_filtrado, x="Fecha", y="Puntaje mínimo", color="Subtipo",
+                        title="Puntaje mínimo por ronda", markers=True)
+            
+            fig1.add_vline(x="2025-01-01",line_dash="dash", line_color="gray")
+            
+            # Añadir línea de referencia si existe
+            if ref_value is not None:
+                try:
+                    num_value = float(ref_value)
+                    if not pd.isna(num_value):
+                        fig1.add_hline(y=num_value, line_dash="dash", line_color="red", 
+                                    annotation_text=f"Mi puntaje: {num_value}", 
+                                    annotation_position="top left")
+                except (ValueError, TypeError):
+                    st.sidebar.warning("Por favor ingrese un valor numérico válido")
+
+            # Ajustes de diseño
+            fig1.update_layout(
+                height=400,
+                margin=dict(t=40, l=0, r=0, b=0),
+                xaxis=dict(
+                    tickangle=-45,
+                    tickfont=dict(size=10)
+                ),
+                legend=dict(orientation="h", y=-0.3)  # leyenda horizontal debajo
+            )
+            st.plotly_chart(fig1, use_container_width=True)
+        
+    with gh2:
+
+        # Gráfico 2: Invitaciones por fecha
+        fig2 = px.line(df_np_filtrado, x="Fecha", y="Invitaciones", color="Subtipo",
+                    title="Invitaciones emitidas a lo largo del tiempo", markers=True)
+        
+        fig2.add_vline(x="2025-01-01",line_dash="dash", line_color="gray")
+        
+        
+        fig2.update_layout(
+            height=400,
+            margin=dict(t=40, l=0, r=0, b=0),
+            xaxis=dict(
+                tickangle=-45,
+                tickfont=dict(size=10)
+            ),
+            legend=dict(orientation="h", y=-0.3)
+        )
+        st.plotly_chart(fig2, use_container_width=True)
+
+    
+    
     # Mostrar tabla de datos
     # with st.expander("Ver tabla de datos"):
     #     st.dataframe(df_np_filtrado)

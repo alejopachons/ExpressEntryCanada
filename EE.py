@@ -54,7 +54,7 @@ def run():
     st.sidebar.header("My score")
 
     # Add reference line input
-    ref_value2 = st.sidebar.number_input("Línea de referencia CRS", value=None, placeholder="Ingrese un valor")
+    # ref_value2 = st.sidebar.number_input("Línea de referencia CRS", value=None, placeholder="Ingrese un valor")
 
     st.title("Express Entry Invitations (Canada )")
 
@@ -64,47 +64,73 @@ def run():
         unsafe_allow_html=True
     )
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     col1.metric("Invitaciones", "{:,}".format(df_filtrado["Invitaciones"].sum()))
-    col2.metric(
-        "Avg. CRS score",
-        0 if pd.isna(df_filtrado["CRS mínimo"].mean()) else int(df_filtrado["CRS mínimo"].mean()),
-    )
+    
     if not df_filtrado["Fecha"].dropna().empty:
         fecha_max = df_filtrado["Fecha"].max()
         dias = (datetime.today().date() - fecha_max.date()).days
     else:
         fecha_max = df["Fecha"].max()
         dias = (datetime.today().date() - fecha_max.date()).days
-    col3.metric("Días desde el último sorteo", dias)
-
-    # Gráfico 2: CRS mínimo por fecha
-    fig2 = px.line(df_filtrado, x="Fecha", y="CRS mínimo", color="Tipo de Ronda",
-                title="Puntaje CRS mínimo por ronda", markers=True)
-
-    fig2.update_layout(
-        height=300
+    col2.metric("Días desde el último sorteo", dias)
+    
+    col3.metric(
+        "Avg. CRS score",
+        0 if pd.isna(df_filtrado["CRS mínimo"].mean()) else int(df_filtrado["CRS mínimo"].mean()),
     )
+    
+    with col4:
+        ref_value2 = st.number_input("Mi puntaje", value=None, placeholder="Ingrese un valor",format="%0f")
 
-    # Check if ref_value2 is a valid number, and add hline only if it is
-    if ref_value2 is not None:
-        try:
-            num_value = float(ref_value2)  # Try converting to float
-            if not pd.isna(num_value):  # Check for NaN after conversion
-                fig2.add_hline(y=num_value, line_dash="dash", line_color="red", annotation_text=f"My score: {num_value}", annotation_position="top right")
-        except (ValueError, TypeError) as e:
-            st.sidebar.warning(f"Invalid input '{ref_value2}' for reference line. Please enter a number. Error: {e}")
+    gh1, gh2 = st.columns(2)
+    
+    with gh1:
 
-    st.plotly_chart(fig2, use_container_width=True)
+        # Gráfico 1: CRS mínimo por fecha
+        fig1 = px.line(df_filtrado, x="Fecha", y="CRS mínimo", color="Tipo de Ronda",
+                    title="Puntaje CRS mínimo por ronda", markers=True)
 
-    # Gráfico 1: Invitaciones por fecha
-    fig1 = px.line(df_filtrado, x="Fecha", y="Invitaciones", color="Tipo de Ronda",
-                title="Invitaciones emitidas a lo largo del tiempo", markers=True)
-    fig1.update_layout(
-        height=300
-    )
+        fig1.add_vline(x="2025-01-01",line_dash="dash", line_color="gray")
+        
+        # Check if ref_value2 is a valid number, and add hline only if it is
+        if ref_value2 is not None:
+            try:
+                num_value = float(ref_value2)  # Try converting to float
+                if not pd.isna(num_value):  # Check for NaN after conversion
+                    fig1.add_hline(y=num_value, line_dash="dash", line_color="red", annotation_text=f"My score: {num_value}", annotation_position="top right")
+            except (ValueError, TypeError) as e:
+                st.sidebar.warning(f"Invalid input '{ref_value2}' for reference line. Please enter a number. Error: {e}")
 
-    st.plotly_chart(fig1, use_container_width=True)
+        fig1.update_layout(
+            height=400,
+            margin=dict(t=40, l=0, r=0, b=0),
+            xaxis=dict(
+                tickangle=-45,
+                tickfont=dict(size=10)
+            ),
+            legend=dict(orientation="h", y=-0.3)  # leyenda horizontal debajo
+        )
+        st.plotly_chart(fig1, use_container_width=True)
+        
+    with gh2:
+
+        # Gráfico 2: Invitaciones por fecha
+        fig2 = px.line(df_filtrado, x="Fecha", y="Invitaciones", color="Tipo de Ronda",
+                    title="Invitaciones emitidas a lo largo del tiempo", markers=True)
+        fig2.add_vline(x="2025-01-01",line_dash="dash", line_color="gray")
+        
+        fig2.update_layout(
+            height=400,
+            margin=dict(t=40, l=0, r=0, b=0),
+            xaxis=dict(
+                tickangle=-45,
+                tickfont=dict(size=10)
+            ),
+            legend=dict(orientation="h", y=-0.3)  # leyenda horizontal debajo
+        )
+
+        st.plotly_chart(fig2, use_container_width=True)
 
 
     # Mostrar tabla opcional

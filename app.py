@@ -3,8 +3,9 @@ import streamlit as st
 st.set_page_config(layout="wide", page_title="Canada calc")
 
 # Sidebar para navegación
-st.sidebar.title("Navegación")
-seleccion = st.sidebar.radio("Ir a:", ["Express Entry", "MPNP"])
+st.title("Selecciona entre EXpress entry y MPNP")
+seleccion = st.radio("Ir a:", ["Express Entry", "MPNP"])
+st.divider()
 
 # Lógica de navegación
 if seleccion == "Express Entry":
@@ -13,3 +14,4 @@ if seleccion == "Express Entry":
 elif seleccion == "MPNP":
     from MPNP import run as run_mpnp
     run_mpnp()  
+    
