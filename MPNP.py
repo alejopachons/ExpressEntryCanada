@@ -35,7 +35,7 @@ def run():
     tipos_unicos = df_np["Tipo"].sort_values().unique()
     selecciones_tipo = {}
     for tipo in tipos_unicos:
-        selecciones_tipo[tipo] = st.sidebar.radio(tipo, value=False, key=f"tipo_{tipo}")
+        selecciones_tipo[tipo] = st.sidebar.radio(tipo, key=f"tipo_{tipo}")
     
     tipos_seleccionados = [tipo for tipo, seleccionado in selecciones_tipo.items() if seleccionado]
     df_np_filtrado = df_np[df_np["Tipo"].isin(tipos_seleccionados)]
