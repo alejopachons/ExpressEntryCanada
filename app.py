@@ -12,7 +12,7 @@ if seleccion == "Express Entry":
     from EE import run as run_ee
     run_ee()
 elif seleccion == "Draws":
-    from Draws import run as run_draws
+    from draws import run as run_draws
     run_draws()
 elif seleccion == "MPNP":
     from MPNP import run as run_mpnp
