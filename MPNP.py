@@ -90,6 +90,7 @@ def run():
     with col4:
         ref_value = st.number_input("Mi puntaje", value=None, placeholder="Ingrese un valor", format="%0f")
     
+    # Gráficas    
     gh1, gh2 = st.columns(2)
     
     with gh1:

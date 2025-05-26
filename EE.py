@@ -60,7 +60,7 @@ def run():
 
     # Add link
     st.markdown(
-        "Invitations for PR under EES [Oficial web site](https://www.canada.ca/en/immigration-refugees-citizenship/corporate/mandate/policies-operational-instructions-agreements/ministerial-instructions/express-entry-rounds.html#wb-auto-4).",
+        "Invitations for PR under EES [Oficial web site](https://www.canada.ca/en/immigration-refugees-citizenship/corporate/mandate/policies-operational-instructions-agreements/ministerial-instructions/express-entry-rounds.html).",
         unsafe_allow_html=True
     )
 
