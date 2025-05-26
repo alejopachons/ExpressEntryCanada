@@ -20,13 +20,16 @@ def run():
             # Mostrar top 10
             for r in rounds[:10]:
                 st.markdown(f"""
-                **Ronda #{r['drawNumber']}**  
-                📅 Fecha: {r['drawDate']}  
-                🧭 Programa: {r['drawName']}  
-                👥 Invitados: {r['drawSize']}  
-                🎯 CRS mínimo: {r['drawCRS']}  
-                ---
-                """)
+                <div style="font-size: 14px; line-height: 1.5;">
+                    <strong>Ronda #{r['drawNumber']}</strong><br>
+                    📅 Fecha: {r['drawDate']}<br>
+                    🧭 Programa: {r.get('drawProgram', 'No especificado')}<br>
+                    👥 Invitados: {r['drawSize']}<br>
+                    🎯 CRS mínimo: {r['drawCRS']}<br>
+                    ✍️ Detalles: {r.get('drawText2', 'No disponible')}
+                </div>
+                <hr>
+                """, unsafe_allow_html=True)
         else:
             st.error("No se pudieron cargar los datos de Express Entry.")
 
