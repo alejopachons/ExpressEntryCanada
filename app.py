@@ -4,7 +4,7 @@ st.set_page_config(layout="wide", page_title="Canada calc")
 
 # Sidebar para navegación
 st.title("Selecciona entre Express entry y MPNP")
-seleccion = st.radio("Ir a:", ["Express Entry", "MPNP"])
+seleccion = st.radio("Ir a:", ["Express Entry", "MPNP", "Draws"])
 st.divider()
 
 # Lógica de navegación
@@ -13,5 +13,8 @@ if seleccion == "Express Entry":
     run_ee()
 elif seleccion == "MPNP":
     from MPNP import run as run_mpnp
-    run_mpnp()  
+    run_mpnp()
+elif seleccion == "Draws":
+    from draws import run as run_draws
+    run_draws()
     
