@@ -22,7 +22,7 @@ def run():
                 st.markdown(f"""
                 **Ronda #{r['drawNumber']}**  
                 📅 Fecha: {r['drawDate']}  
-                🧭 Programa: {r['drawProgram']}  
+                🧭 Programa: {r['drawText2']}  
                 👥 Invitados: {r['drawSize']}  
                 🎯 CRS mínimo: {r['drawCRS']}  
                 ---
