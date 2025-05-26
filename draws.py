@@ -21,10 +21,10 @@ def run():
             for r in rounds[:10]:
                 st.markdown(f"""
                 **Ronda #{r['drawNumber']}**  
-                📅 Fecha: {r['date']}  
-                🧭 Programa: {r['program']}  
-                👥 Invitados: {r['candidatesInvited']}  
-                🎯 CRS mínimo: {r['crsCutoff']}  
+                📅 Fecha: {r['drawDate']}  
+                🧭 Programa: {r['drawProgram']}  
+                👥 Invitados: {r['drawSize']}  
+                🎯 CRS mínimo: {r['drawCRS']}  
                 ---
                 """)
         else:
