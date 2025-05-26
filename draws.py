@@ -23,7 +23,7 @@ def run():
                 <div style="font-size: 14px; line-height: 1.5;">
                     <strong>Ronda #{r['drawNumber']}</strong><br>
                     📅 Fecha: {r['drawDate']}<br>
-                    🧭 Programa: {r.get('drawProgram', 'No especificado')}<br>
+                    🧭 Programa: {r.get('drawName', 'No especificado')}<br>
                     👥 Invitados: {r['drawSize']}<br>
                     🎯 CRS mínimo: {r['drawCRS']}<br>
                     ✍️ Detalles: {r.get('drawText2', 'No disponible')}
