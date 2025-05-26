@@ -17,4 +17,3 @@ elif seleccion == "MPNP":
 elif seleccion == "Draws":
     from Draws import run as run_draws
     run_draws()
-    
