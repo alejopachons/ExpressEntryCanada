@@ -15,6 +15,6 @@ elif seleccion == "MPNP":
     from MPNP import run as run_mpnp
     run_mpnp()
 elif seleccion == "Draws":
-    from draws import run as run_draws
+    from Draws import run as run_draws
     run_draws()
     
