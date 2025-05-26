@@ -18,7 +18,7 @@ def run():
             rounds = data.get("rounds", [])
 
             # Mostrar top 10
-            for r in rounds[:10]:
+            for r in rounds[:3]:
                 st.markdown(f"""
                 <div style="font-size: 14px; line-height: 1.5;">
                     <strong>Ronda #{r['drawNumber']}</strong><br>
@@ -37,6 +37,6 @@ def run():
         st.subheader("EOI Draws – Manitoba")
         st.components.v1.iframe(
             "https://immigratemanitoba.com/notices/eoi-draw/",
-            height=700,
+            height=500,
             scrolling=True
         )
