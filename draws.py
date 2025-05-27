@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+from datetime import datetime
 
 def run():
     st.title("Draws")
@@ -7,7 +8,7 @@ def run():
     col1, col2 = st.columns(2)
 
     with col1:
-        st.subheader("Top 10 rondas recientes – Express Entry")
+        st.subheader("Top 3 rondas recientes – Express Entry")
         
         # Cargar los datos desde el JSON
         url = "https://www.canada.ca/content/dam/ircc/documents/json/ee_rounds_123_en.json"
