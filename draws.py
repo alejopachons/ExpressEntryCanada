@@ -17,12 +17,22 @@ def run():
             data = response.json()
             rounds = data.get("rounds", [])
 
-            # Mostrar top 10
-            for r in rounds[:3]:
+            # Evaluar la antigüedad de la ronda más reciente
+            fecha_draw = datetime.strptime(rounds[0]['drawDate'], "%Y-%m-%d")
+            dias_antiguedad = (datetime.today() - fecha_draw).days
+
+            # Badge según la antigüedad
+            if dias_antiguedad >= 5:
+                badge = '<span style="background-color: #4CAF50; color: white; padding: 2px 6px; border-radius: 4px; font-size: 12px;">Actualizado</span>'
+            else:
+                badge = '<span style="background-color: orange; color: white; padding: 2px 6px; border-radius: 4px; font-size: 12px;">Reciente</span>'
+
+            # Mostrar las rondas
+            for i, r in enumerate(rounds[:3]):
                 st.markdown(f"""
                 <div style="font-size: 14px; line-height: 1.5;">
                     <strong>Ronda #{r['drawNumber']}</strong><br>
-                    📅 Fecha: {r['drawDate']}<br>
+                    📅 Fecha: {r['drawDate']} {'🟢' if i == 0 else ''} {badge if i == 0 else ''}<br>
                     🧭 Programa: {r.get('drawName', 'No especificado')}<br>
                     👥 Invitados: {r['drawSize']}<br>
                     🎯 CRS mínimo: {r['drawCRS']}<br>
