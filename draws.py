@@ -33,7 +33,7 @@ def run():
                 st.markdown(f"""
                 <div style="font-size: 14px; line-height: 1.5;">
                     <strong>Ronda #{r['drawNumber']}</strong><br>
-                    📅 Fecha: {r['drawDate']} {'🟢' if i == 0 else ''} {badge if i == 0 else ''}<br>
+                    📅 Fecha: {r['drawDate']} - {badge if i == 0 else ''}<br>
                     🧭 Programa: {r.get('drawName', 'No especificado')}<br>
                     👥 Invitados: {r['drawSize']}<br>
                     🎯 CRS mínimo: {r['drawCRS']}<br>
