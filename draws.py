@@ -24,9 +24,9 @@ def run():
 
             # Badge según la antigüedad
             if dias_antiguedad >= 5:
-                badge = '<span style="background-color: #4CAF50; color: white; padding: 2px 6px; border-radius: 4px; font-size: 12px;">Actualizado</span>'
+                badge = '<span style="background-color: Orange; color: white; padding: 2px 6px; border-radius: 4px; font-size: 12px;">Antiguo</span>'
             else:
-                badge = '<span style="background-color: orange; color: white; padding: 2px 6px; border-radius: 4px; font-size: 12px;">Reciente</span>'
+                badge = '<span style="background-color: #4CAF50; color: white; padding: 2px 6px; border-radius: 4px; font-size: 12px;">Reciente</span>'
 
             # Mostrar las rondas
             for i, r in enumerate(rounds[:3]):
