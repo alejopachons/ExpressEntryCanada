@@ -25,6 +25,8 @@ def run():
             # Badge según la antigüedad
             if dias_antiguedad >= 5:
                 badge = '<span style="background-color: Orange; color: white; padding: 2px 6px; border-radius: 4px; font-size: 12px;">Antiguo</span>'
+            elif dias_antiguedad < 5 and dias_antiguedad > 1:
+                badge = '<span style="background-color: Blue; color: white; padding: 2px 6px; border-radius: 4px; font-size: 12px;">Antiguo</span>'
             else:
                 badge = '<span style="background-color: #4CAF50; color: white; padding: 2px 6px; border-radius: 4px; font-size: 12px;">Reciente</span>'
 
