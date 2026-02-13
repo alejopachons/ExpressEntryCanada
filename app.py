@@ -41,39 +41,61 @@ df = load_data()
 if df.empty:
     st.stop()
 
-# --- 2. SIDEBAR (CONFIGURACIÓN) ---
+# --- 2. LÓGICA DE RESET (NUEVO) ---
+# Definimos los valores por defecto
+DEFAULT_START = date(2025, 1, 1)
+DEFAULT_END = date.today()
+
+def reset_filters():
+    st.session_state.user_score = None
+    st.session_state.date_range = (DEFAULT_START, DEFAULT_END)
+    st.session_state.all_programs_check = True
+
+# --- 3. SIDEBAR (CONFIGURACIÓN) ---
 st.sidebar.header("⚙️ Configuración")
+
+# Botón de Reset
+if st.sidebar.button("🔄 Restablecer Filtros", type="primary"):
+    reset_filters()
+
+st.sidebar.markdown("---")
 
 # A. INPUT PUNTAJE
 st.sidebar.subheader("🎯 Tu Perfil")
+# Agregamos key='user_score' para controlarlo desde el reset
 user_score = st.sidebar.number_input(
     "Tu puntaje CRS:", 
     min_value=0, 
     max_value=1200, 
-    value=None,  # Inicia vacío
+    value=None, 
     placeholder="Ej: 481",
-    step=1
+    step=1,
+    key='user_score' 
 )
 
 st.sidebar.markdown("---")
 
 # B. FILTRO FECHAS
 st.sidebar.subheader("📅 Rango de Fechas")
-default_start = date(2025, 1, 1)
-default_end = date.today()
 
-date_range = st.sidebar.date_input(
+# Inicializar estado si no existe para evitar errores en primera carga
+if 'date_range' not in st.session_state:
+    st.session_state.date_range = (DEFAULT_START, DEFAULT_END)
+
+date_range_input = st.sidebar.date_input(
     "Periodo:",
-    value=(default_start, default_end),
+    value=st.session_state.date_range, # Usamos el estado
     min_value=df['drawDate'].min().date(),
     max_value=date.today(),
-    format="DD/MM/YYYY"
+    format="DD/MM/YYYY",
+    key='date_range'
 )
 
-if len(date_range) == 2:
-    start_date, end_date = date_range
+# Validación de tupla (inicio, fin)
+if len(date_range_input) == 2:
+    start_date, end_date = date_range_input
 else:
-    start_date, end_date = default_start, default_end
+    start_date, end_date = DEFAULT_START, DEFAULT_END
 
 st.sidebar.markdown("---")
 
@@ -82,13 +104,19 @@ st.sidebar.subheader("📋 Tipos de Ronda")
 unique_programs = sorted(df['drawName'].unique())
 
 with st.sidebar.expander("Seleccionar Programas", expanded=False):
-    all_selected = st.checkbox("Seleccionar Todos", value=True)
+    # Checkbox para seleccionar todos (con key para reset)
+    if 'all_programs_check' not in st.session_state:
+        st.session_state.all_programs_check = True
+        
+    all_selected = st.checkbox("Seleccionar Todos", value=True, key='all_programs_check')
+    
     if all_selected:
         selected_programs = unique_programs
     else:
+        # Si se desmarca "Todos", mostramos la lista
         selected_programs = st.multiselect("Programas:", unique_programs, default=unique_programs)
 
-# --- 3. FILTRADO ---
+# --- 4. FILTRADO ---
 mask = (
     (df['drawDate'].dt.date >= start_date) & 
     (df['drawDate'].dt.date <= end_date) &
@@ -96,7 +124,7 @@ mask = (
 )
 df_filtered = df[mask]
 
-# --- 4. DASHBOARD ---
+# --- 5. DASHBOARD ---
 st.title("🍁 Análisis: Puntaje vs. Cantidad de Invitaciones")
 
 if df_filtered.empty:
@@ -154,12 +182,12 @@ def create_dual_axis_chart(data, title, score_benchmark):
         margin=dict(l=0, r=0, t=30, b=0),
         showlegend=False,
         title=dict(text=f"CRS vs Cantidad", font=dict(size=12), x=0.5),
-        hovermode="x unified" # Hover unificado para ver ambos datos a la vez
+        hovermode="x unified"
     )
     
     # Ejes
     fig.update_yaxes(title_text=None, secondary_y=False) # Izquierda (Puntaje)
-    fig.update_yaxes(showgrid=False, secondary_y=True)   # Derecha (Cantidad) - Sin grilla para no ensuciar
+    fig.update_yaxes(showgrid=False, secondary_y=True)   # Derecha (Cantidad)
 
     return fig
 
@@ -180,7 +208,7 @@ for batch in chunked(programs_list, 4):
     for i, (program_name, group_data) in enumerate(batch):
         with cols[i]:
             with st.container(border=True):
-                # Título del programa (Truncado si es muy largo visualmente)
+                # Título del programa
                 st.markdown(f"**{program_name}**")
                 
                 # Obtener últimos datos
@@ -188,10 +216,10 @@ for batch in chunked(programs_list, 4):
                 last_crs = last_row['drawCRS']
                 last_date = last_row['drawDate'].strftime("%Y-%m-%d")
                 
-                # --- WARNING 1: FECHA (AZUL) ---
+                # WARNING 1: FECHA
                 st.info(f"📅 Última: {last_date}")
 
-                # --- WARNING 2: COMPARACIÓN (VERDE/ROJO/RAYA) ---
+                # WARNING 2: COMPARACIÓN
                 if user_score is not None and user_score > 0:
                     diff = user_score - last_crs
                     if diff >= 0:
@@ -199,10 +227,9 @@ for batch in chunked(programs_list, 4):
                     else:
                         st.error(f"❌ Faltan {abs(diff):.0f} pts")
                 else:
-                    # Si es 0 o None, mostramos raya amarilla/neutra
                     st.warning("➖ Comparación: --")
 
-                # --- GRÁFICO DOBLE EJE ---
+                # GRÁFICO DOBLE EJE
                 fig = create_dual_axis_chart(group_data, program_name, user_score)
                 st.plotly_chart(fig, use_container_width=True)
 
