@@ -2,125 +2,173 @@ import streamlit as st
 import pandas as pd
 import requests
 import plotly.express as px
+import plotly.graph_objects as go
+from datetime import datetime, date
 
 st.set_page_config(layout="wide", page_title="Dashboard Express Entry")
 
 # --- 1. CARGA DE DATOS ---
 @st.cache_data(ttl=3600)
 def load_data():
-    # URL del JSON oficial
     url = "https://www.canada.ca/content/dam/ircc/documents/json/ee_rounds_123_en.json"
-    
     try:
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
         
-        # Extraemos la lista de rondas
         if isinstance(data, dict) and 'rounds' in data:
             df = pd.DataFrame(data['rounds'])
         else:
-            st.error("La estructura del JSON no es la esperada (no se encontró la clave 'rounds').")
             return pd.DataFrame()
 
-        # --- LIMPIEZA Y CONVERSIÓN ---
-        
-        # 1. FECHAS: Convertir 'drawDate' a datetime
+        # Limpieza
         df['drawDate'] = pd.to_datetime(df['drawDate'], errors='coerce')
-        
-        # 2. PUNTAJE (CRS): La clave correcta es 'drawCRS'
-        # Viene como texto ("400"), lo pasamos a número
         df['drawCRS'] = pd.to_numeric(df['drawCRS'], errors='coerce')
-        
-        # 3. INVITACIONES (Size): Limpiar comas (ej: "8,500" -> 8500)
         df['drawSize'] = df['drawSize'].astype(str).str.replace(',', '', regex=False)
         df['drawSize'] = pd.to_numeric(df['drawSize'], errors='coerce')
-        
-        # 4. NOMBRE DEL PROGRAMA: Rellenar nulos
         df['drawName'] = df['drawName'].fillna('General / No especificado')
         
-        # 5. AÑO: Extraer para el filtro
-        df['Year'] = df['drawDate'].dt.year
-
-        # Ordenar por fecha descendente (lo más nuevo arriba)
+        # Eliminar filas sin fecha válida
+        df = df.dropna(subset=['drawDate'])
+        
         return df.sort_values(by='drawDate', ascending=False)
-
     except Exception as e:
-        st.error(f"Error al procesar los datos: {e}")
+        st.error(f"Error: {e}")
         return pd.DataFrame()
 
-# Cargar el DataFrame
 df = load_data()
-
 if df.empty:
     st.stop()
 
-# --- 2. SIDEBAR (FILTROS) ---
-st.sidebar.title("🍁 Filtros")
+# --- 2. SIDEBAR CONFIGURACIÓN ---
+st.sidebar.header("⚙️ Configuración")
 
-# Filtro de Año
-all_years = sorted(df['Year'].dropna().unique(), reverse=True)
-selected_years = st.sidebar.multiselect("Seleccionar Años", all_years, default=all_years[:2])
+# A. INPUT DE PUNTAJE USUARIO
+st.sidebar.subheader("🎯 Tu Perfil")
+user_score = st.sidebar.number_input(
+    "Ingresa tu puntaje CRS:", 
+    min_value=0, 
+    max_value=1200, 
+    value=450, 
+    step=1,
+    help="Escribe tu puntaje para compararlo con las rondas históricas."
+)
 
-# Filtro de Programa
-all_programs = df['drawName'].unique()
-selected_programs = st.sidebar.multiselect("Tipo de Ronda", all_programs, default=all_programs)
+st.sidebar.markdown("---")
 
-# Aplicar filtros
-df_filtered = df.copy()
+# B. FILTRO DE FECHA (SLIDER)
+st.sidebar.subheader("📅 Rango de Fechas")
+min_date = df['drawDate'].min().date()
+max_date = df['drawDate'].max().date()
 
-if selected_years:
-    df_filtered = df_filtered[df_filtered['Year'].isin(selected_years)]
+start_date, end_date = st.sidebar.slider(
+    "Selecciona el periodo:",
+    min_value=min_date,
+    max_value=max_date,
+    value=(date(2023, 1, 1), max_date), # Por defecto desde 2023
+    format="DD/MM/YYYY"
+)
 
-if selected_programs:
-    df_filtered = df_filtered[df_filtered['drawName'].isin(selected_programs)]
+st.sidebar.markdown("---")
 
-# --- 3. DASHBOARD PRINCIPAL ---
+# C. FILTRO DE TIPO DE RONDA (CHECKBOXES)
+st.sidebar.subheader("📋 Tipos de Ronda")
 
-st.title("🍁 Dashboard Express Entry (Canadá)")
-st.markdown(f"Mostrando **{len(df_filtered)}** rondas de invitación.")
+# Obtenemos programas únicos ordenados
+unique_programs = sorted(df['drawName'].unique())
 
-# KPIs
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("Promedio CRS", f"{df_filtered['drawCRS'].mean():.0f}")
-col2.metric("Mínimo CRS", f"{df_filtered['drawCRS'].min():.0f}")
-col3.metric("Total Invitaciones", f"{df_filtered['drawSize'].sum():,.0f}")
-col4.metric("Última Ronda", df_filtered['drawDate'].max().strftime('%Y-%m-%d') if not df_filtered.empty else "-")
+# Contenedor expandible para no saturar la barra si son muchos
+with st.sidebar.expander("Seleccionar Programas", expanded=True):
+    # Opción para marcar/desmarcar todos
+    all_selected = st.checkbox("Seleccionar Todos", value=True)
+    
+    selected_programs = []
+    if all_selected:
+        selected_programs = unique_programs
+        # Mostramos la lista pero deshabilitada o visualmente indicamos que están todos
+        st.caption("✅ Todos los programas seleccionados")
+    else:
+        # Generamos un checkbox por cada programa
+        for prog in unique_programs:
+            if st.checkbox(prog, value=False):
+                selected_programs.append(prog)
 
-st.markdown("---")
+# --- 3. FILTRADO DE DATOS ---
+mask = (
+    (df['drawDate'].dt.date >= start_date) & 
+    (df['drawDate'].dt.date <= end_date) &
+    (df['drawName'].isin(selected_programs))
+)
+df_filtered = df[mask]
 
-# GRÁFICOS
+# --- 4. ÁREA PRINCIPAL ---
+st.title("🍁 Análisis de Rondas Express Entry")
 
-# 1. Línea de Tiempo del CRS
-st.subheader("📈 Evolución del Puntaje CRS")
-fig_line = px.line(df_filtered, 
-                   x='drawDate', 
-                   y='drawCRS', 
-                   color='drawName',
-                   markers=True,
-                   title="Puntaje CRS por Fecha y Tipo de Ronda",
-                   labels={'drawCRS': 'Puntaje CRS', 'drawDate': 'Fecha'})
-st.plotly_chart(fig_line, use_container_width=True)
+if user_score > 0:
+    st.info(f"💡 Tu puntaje es **{user_score}**. La línea roja punteada en los gráficos indica tu posición.")
 
-# 2. Relación Volumen vs Puntaje (Scatter)
-st.subheader("🔍 Relación: Cantidad de Invitaciones vs. Puntaje CRS")
-fig_scatter = px.scatter(df_filtered, 
-                         x='drawSize', 
-                         y='drawCRS', 
-                         color='drawName', 
-                         size='drawSize',
-                         hover_data=['drawDate'],
-                         title="¿Afecta el tamaño de la ronda al puntaje CRS?")
-st.plotly_chart(fig_scatter, use_container_width=True)
+if df_filtered.empty:
+    st.warning("No hay datos para los filtros seleccionados. Intenta ampliar el rango de fechas o seleccionar más programas.")
+    st.stop()
 
-# 3. Tabla de Datos
-st.markdown("---")
-with st.expander("📂 Ver Tabla de Datos Completa"):
-    st.dataframe(
-        df_filtered[['drawNumber', 'drawDate', 'drawName', 'drawCRS', 'drawSize']]
-        .style.format({
-            "drawCRS": "{:.0f}",
-            "drawSize": "{:,.0f}"
-        }),
-        use_container_width=True
-    )
+# --- 5. GENERACIÓN DE GRÁFICOS (UNO POR TIPO) ---
+
+# Agrupamos por nombre de programa para iterar
+grouped = df_filtered.groupby('drawName')
+
+# Contenedor principal
+st.markdown("### Comportamiento por Tipo de Ronda")
+
+for program_name, group_data in grouped:
+    # Ordenamos por fecha para que la línea salga bien
+    group_data = group_data.sort_values(by='drawDate')
+    
+    # Solo mostramos si hay datos en el rango
+    if len(group_data) > 0:
+        with st.container():
+            st.markdown(f"#### 📌 {program_name}")
+            
+            # Métricas rápidas encima del gráfico
+            last_draw = group_data.iloc[-1]
+            diff = user_score - last_draw['drawCRS']
+            
+            col_metrics1, col_metrics2 = st.columns([3, 1])
+            with col_metrics2:
+                if diff >= 0:
+                    st.success(f"Estás +{diff:.0f} pts sobre la última ronda")
+                else:
+                    st.error(f"Te faltan {abs(diff):.0f} pts")
+
+            # Gráfico de Línea
+            fig = px.line(
+                group_data, 
+                x='drawDate', 
+                y='drawCRS',
+                markers=True,
+                text='drawCRS', # Mostrar el número en el punto
+                title=f"Histórico CRS: {program_name}"
+            )
+            
+            # Personalización visual
+            fig.update_traces(textposition="bottom right", line_color='#1f77b4')
+            
+            # AGREGAR LÍNEA ROJA (PUNTAJE DEL USUARIO)
+            fig.add_hline(
+                y=user_score, 
+                line_dash="dash", 
+                line_color="red", 
+                annotation_text="Tu Puntaje", 
+                annotation_position="top left"
+            )
+            
+            # Ajustar eje Y para que siempre se vea la línea roja aunque esté lejos de los datos
+            y_max = max(group_data['drawCRS'].max(), user_score) + 20
+            y_min = min(group_data['drawCRS'].min(), user_score) - 20
+            fig.update_layout(yaxis_range=[y_min, y_max])
+            
+            st.plotly_chart(fig, use_container_width=True)
+            st.markdown("---")
+
+# Tabla Final Resumen
+with st.expander("📂 Ver Datos en Tabla"):
+    st.dataframe(df_filtered[['drawDate', 'drawName', 'drawCRS', 'drawSize']])
