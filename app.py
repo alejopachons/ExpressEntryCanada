@@ -2,9 +2,9 @@ import streamlit as st
 import pandas as pd
 import requests
 import plotly.express as px
-import plotly.graph_objects as go
 from datetime import datetime, date
 
+# Configuración de página ancha para que caben los 4 gráficos
 st.set_page_config(layout="wide", page_title="Dashboard Express Entry")
 
 # --- 1. CARGA DE DATOS ---
@@ -33,7 +33,7 @@ def load_data():
         
         return df.sort_values(by='drawDate', ascending=False)
     except Exception as e:
-        st.error(f"Error: {e}")
+        st.error(f"Error cargando datos: {e}")
         return pd.DataFrame()
 
 df = load_data()
@@ -43,55 +43,53 @@ if df.empty:
 # --- 2. SIDEBAR CONFIGURACIÓN ---
 st.sidebar.header("⚙️ Configuración")
 
-# A. INPUT DE PUNTAJE USUARIO
+# A. INPUT DE PUNTAJE (VACÍO AL INICIO)
 st.sidebar.subheader("🎯 Tu Perfil")
 user_score = st.sidebar.number_input(
     "Ingresa tu puntaje CRS:", 
     min_value=0, 
     max_value=1200, 
-    value=450, 
-    step=1,
-    help="Escribe tu puntaje para compararlo con las rondas históricas."
+    value=None,  # <--- Esto hace que el campo inicie vacío
+    placeholder="Ej: 481",
+    step=1
 )
 
 st.sidebar.markdown("---")
 
-# B. FILTRO DE FECHA (SLIDER)
+# B. FILTRO DE FECHA (DATEPICKER)
 st.sidebar.subheader("📅 Rango de Fechas")
-min_date = df['drawDate'].min().date()
-max_date = df['drawDate'].max().date()
 
-start_date, end_date = st.sidebar.slider(
+# Definir fechas por defecto: 1 Ene 2025 a Hoy
+default_start = date(2025, 1, 1)
+default_end = date.today()
+
+# El date_input devuelve una tupla con (inicio, fin)
+date_range = st.sidebar.date_input(
     "Selecciona el periodo:",
-    min_value=min_date,
-    max_value=max_date,
-    value=(date(2023, 1, 1), max_date), # Por defecto desde 2023
+    value=(default_start, default_end),
+    min_value=df['drawDate'].min().date(),
+    max_value=date.today(),
     format="DD/MM/YYYY"
 )
 
+# Validar que se hayan seleccionado ambas fechas (inicio y fin)
+if len(date_range) == 2:
+    start_date, end_date = date_range
+else:
+    start_date, end_date = default_start, default_end
+
 st.sidebar.markdown("---")
 
-# C. FILTRO DE TIPO DE RONDA (CHECKBOXES)
+# C. FILTRO DE TIPO DE RONDA
 st.sidebar.subheader("📋 Tipos de Ronda")
-
-# Obtenemos programas únicos ordenados
 unique_programs = sorted(df['drawName'].unique())
 
-# Contenedor expandible para no saturar la barra si son muchos
-with st.sidebar.expander("Seleccionar Programas", expanded=True):
-    # Opción para marcar/desmarcar todos
+with st.sidebar.expander("Seleccionar Programas", expanded=False):
     all_selected = st.checkbox("Seleccionar Todos", value=True)
-    
-    selected_programs = []
     if all_selected:
         selected_programs = unique_programs
-        # Mostramos la lista pero deshabilitada o visualmente indicamos que están todos
-        st.caption("✅ Todos los programas seleccionados")
     else:
-        # Generamos un checkbox por cada programa
-        for prog in unique_programs:
-            if st.checkbox(prog, value=False):
-                selected_programs.append(prog)
+        selected_programs = st.multiselect("Elige los programas:", unique_programs, default=unique_programs)
 
 # --- 3. FILTRADO DE DATOS ---
 mask = (
@@ -104,71 +102,74 @@ df_filtered = df[mask]
 # --- 4. ÁREA PRINCIPAL ---
 st.title("🍁 Análisis de Rondas Express Entry")
 
-if user_score > 0:
-    st.info(f"💡 Tu puntaje es **{user_score}**. La línea roja punteada en los gráficos indica tu posición.")
+if user_score:
+    st.info(f"💡 Comparando con tu puntaje: **{user_score}**")
 
 if df_filtered.empty:
-    st.warning("No hay datos para los filtros seleccionados. Intenta ampliar el rango de fechas o seleccionar más programas.")
+    st.warning("No hay datos para los filtros seleccionados.")
     st.stop()
 
-# --- 5. GENERACIÓN DE GRÁFICOS (UNO POR TIPO) ---
+# --- 5. GRID DE GRÁFICOS (4 POR FILA) ---
 
-# Agrupamos por nombre de programa para iterar
-grouped = df_filtered.groupby('drawName')
+# Obtener lista de DataFrames agrupados
+programs_list = []
+for name, group in df_filtered.groupby('drawName'):
+    if not group.empty:
+        programs_list.append((name, group.sort_values('drawDate')))
 
-# Contenedor principal
-st.markdown("### Comportamiento por Tipo de Ronda")
+# Función para dividir la lista en bloques de 4 (chunks)
+def chunked(iterable, n):
+    for i in range(0, len(iterable), n):
+        yield iterable[i:i + n]
 
-for program_name, group_data in grouped:
-    # Ordenamos por fecha para que la línea salga bien
-    group_data = group_data.sort_values(by='drawDate')
+# Iterar sobre los programas en grupos de 4
+for batch in chunked(programs_list, 4):
+    cols = st.columns(4) # Crear 4 columnas
     
-    # Solo mostramos si hay datos en el rango
-    if len(group_data) > 0:
-        with st.container():
-            st.markdown(f"#### 📌 {program_name}")
-            
-            # Métricas rápidas encima del gráfico
-            last_draw = group_data.iloc[-1]
-            diff = user_score - last_draw['drawCRS']
-            
-            col_metrics1, col_metrics2 = st.columns([3, 1])
-            with col_metrics2:
-                if diff >= 0:
-                    st.success(f"Estás +{diff:.0f} pts sobre la última ronda")
+    for i, (program_name, group_data) in enumerate(batch):
+        with cols[i]:
+            # Contenedor visual para cada tarjeta
+            with st.container(border=True):
+                # Título pequeño para que quepa
+                st.markdown(f"**{program_name}**")
+                
+                # Métricas compactas
+                last_crs = group_data.iloc[-1]['drawCRS']
+                last_date = group_data.iloc[-1]['drawDate'].strftime("%d/%m/%y")
+                
+                if user_score:
+                    diff = user_score - last_crs
+                    color_delta = "normal" if diff >= 0 else "inverse"
+                    st.metric("Última ronda", f"{last_crs} pts", f"{diff:+.0f} vs tú", delta_color=color_delta)
                 else:
-                    st.error(f"Te faltan {abs(diff):.0f} pts")
+                    st.metric("Última ronda", f"{last_crs} pts", f"{last_date}")
 
-            # Gráfico de Línea
-            fig = px.line(
-                group_data, 
-                x='drawDate', 
-                y='drawCRS',
-                markers=True,
-                text='drawCRS', # Mostrar el número en el punto
-                title=f"Histórico CRS: {program_name}"
-            )
-            
-            # Personalización visual
-            fig.update_traces(textposition="bottom right", line_color='#1f77b4')
-            
-            # AGREGAR LÍNEA ROJA (PUNTAJE DEL USUARIO)
-            fig.add_hline(
-                y=user_score, 
-                line_dash="dash", 
-                line_color="red", 
-                annotation_text="Tu Puntaje", 
-                annotation_position="top left"
-            )
-            
-            # Ajustar eje Y para que siempre se vea la línea roja aunque esté lejos de los datos
-            y_max = max(group_data['drawCRS'].max(), user_score) + 20
-            y_min = min(group_data['drawCRS'].min(), user_score) - 20
-            fig.update_layout(yaxis_range=[y_min, y_max])
-            
-            st.plotly_chart(fig, use_container_width=True)
-            st.markdown("---")
+                # Gráfico Simplificado (Sparkline style)
+                fig = px.line(
+                    group_data, 
+                    x='drawDate', 
+                    y='drawCRS',
+                    markers=True,
+                    height=200 # Altura fija pequeña
+                )
+                
+                # Diseño minimalista para la grilla pequeña
+                fig.update_layout(
+                    margin=dict(l=0, r=0, t=10, b=0),
+                    xaxis_title=None,
+                    yaxis_title=None,
+                    showlegend=False
+                )
+                
+                # Línea roja del usuario
+                if user_score:
+                    fig.add_hline(y=user_score, line_dash="dot", line_color="red", line_width=2)
+                    # Ajustar zoom vertical para ver la línea roja si está lejos
+                    y_vals = list(group_data['drawCRS']) + [user_score]
+                    fig.update_yaxes(range=[min(y_vals)-10, max(y_vals)+10])
 
-# Tabla Final Resumen
-with st.expander("📂 Ver Datos en Tabla"):
-    st.dataframe(df_filtered[['drawDate', 'drawName', 'drawCRS', 'drawSize']])
+                st.plotly_chart(fig, use_container_width=True)
+
+# Tabla al final
+with st.expander("📂 Ver Tabla de Datos"):
+    st.dataframe(df_filtered[['drawDate', 'drawName', 'drawCRS', 'drawSize']], use_container_width=True)
