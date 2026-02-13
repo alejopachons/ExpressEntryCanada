@@ -1,12 +1,11 @@
 import streamlit as st
 import pandas as pd
 import requests
-import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from datetime import datetime, date
+from datetime import date
 
-# Configuración de página
+# Configuración de página ancha
 st.set_page_config(layout="wide", page_title="Dashboard Express Entry")
 
 # --- 1. CARGA DE DATOS ---
@@ -23,7 +22,7 @@ def load_data():
         else:
             return pd.DataFrame()
 
-        # Limpieza
+        # Limpieza y conversión
         df['drawDate'] = pd.to_datetime(df['drawDate'], errors='coerce')
         df['drawCRS'] = pd.to_numeric(df['drawCRS'], errors='coerce')
         df['drawSize'] = df['drawSize'].astype(str).str.replace(',', '', regex=False)
@@ -42,29 +41,29 @@ df = load_data()
 if df.empty:
     st.stop()
 
-# --- 2. SIDEBAR ---
+# --- 2. SIDEBAR (CONFIGURACIÓN) ---
 st.sidebar.header("⚙️ Configuración")
 
-# A. INPUT DE PUNTAJE (VACÍO AL INICIO)
+# A. INPUT PUNTAJE
 st.sidebar.subheader("🎯 Tu Perfil")
 user_score = st.sidebar.number_input(
-    "Ingresa tu puntaje CRS:", 
+    "Tu puntaje CRS:", 
     min_value=0, 
     max_value=1200, 
-    value=None, 
+    value=None,  # Inicia vacío
     placeholder="Ej: 481",
     step=1
 )
 
 st.sidebar.markdown("---")
 
-# B. FILTRO DE FECHA (DATEPICKER)
+# B. FILTRO FECHAS
 st.sidebar.subheader("📅 Rango de Fechas")
 default_start = date(2025, 1, 1)
 default_end = date.today()
 
 date_range = st.sidebar.date_input(
-    "Selecciona el periodo:",
+    "Periodo:",
     value=(default_start, default_end),
     min_value=df['drawDate'].min().date(),
     max_value=date.today(),
@@ -78,7 +77,7 @@ else:
 
 st.sidebar.markdown("---")
 
-# C. FILTRO DE TIPO DE RONDA
+# C. FILTRO PROGRAMAS
 st.sidebar.subheader("📋 Tipos de Ronda")
 unique_programs = sorted(df['drawName'].unique())
 
@@ -87,7 +86,7 @@ with st.sidebar.expander("Seleccionar Programas", expanded=False):
     if all_selected:
         selected_programs = unique_programs
     else:
-        selected_programs = st.multiselect("Elige los programas:", unique_programs, default=unique_programs)
+        selected_programs = st.multiselect("Programas:", unique_programs, default=unique_programs)
 
 # --- 3. FILTRADO ---
 mask = (
@@ -97,120 +96,116 @@ mask = (
 )
 df_filtered = df[mask]
 
-# --- 4. ÁREA PRINCIPAL ---
-st.title("🍁 Análisis de Rondas Express Entry")
-
-if user_score:
-    st.info(f"💡 Comparando con tu puntaje: **{user_score}**")
+# --- 4. DASHBOARD ---
+st.title("🍁 Análisis: Puntaje vs. Cantidad de Invitaciones")
 
 if df_filtered.empty:
-    st.warning("No hay datos para los filtros seleccionados.")
+    st.warning("No hay datos en este rango de fechas.")
     st.stop()
 
-# --- NUEVO: PESTAÑAS PARA ORGANIZAR LA VISTA ---
-tab1, tab2 = st.tabs(["📊 Grid de Programas", "⚖️ Comparativa: Puntaje vs Cantidad"])
+# Función para crear el gráfico combinado (Doble Eje)
+def create_dual_axis_chart(data, title, score_benchmark):
+    # Crear figura con eje secundario
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
 
-# --- TAB 1: EL GRID DE 4 GRÁFICOS (LO QUE YA TENÍAS) ---
-with tab1:
-    programs_list = []
-    for name, group in df_filtered.groupby('drawName'):
-        if not group.empty:
-            programs_list.append((name, group.sort_values('drawDate')))
-
-    def chunked(iterable, n):
-        for i in range(0, len(iterable), n):
-            yield iterable[i:i + n]
-
-    for batch in chunked(programs_list, 4):
-        cols = st.columns(4)
-        for i, (program_name, group_data) in enumerate(batch):
-            with cols[i]:
-                with st.container(border=True):
-                    st.markdown(f"**{program_name}**")
-                    last_crs = group_data.iloc[-1]['drawCRS']
-                    last_date = group_data.iloc[-1]['drawDate'].strftime("%d/%m/%y")
-                    
-                    if user_score:
-                        diff = user_score - last_crs
-                        color_delta = "normal" if diff >= 0 else "inverse"
-                        st.metric("Última ronda", f"{last_crs} pts", f"{diff:+.0f} vs tú", delta_color=color_delta)
-                    else:
-                        st.metric("Última ronda", f"{last_crs} pts", f"{last_date}")
-
-                    fig = px.line(group_data, x='drawDate', y='drawCRS', markers=True, height=200)
-                    fig.update_layout(margin=dict(l=0, r=0, t=10, b=0), xaxis_title=None, yaxis_title=None, showlegend=False)
-                    
-                    if user_score:
-                        fig.add_hline(y=user_score, line_dash="dot", line_color="red", line_width=2)
-                        y_vals = list(group_data['drawCRS']) + [user_score]
-                        fig.update_yaxes(range=[min(y_vals)-10, max(y_vals)+10])
-
-                    st.plotly_chart(fig, use_container_width=True)
-
-# --- TAB 2: EL NUEVO GRÁFICO DE COMPARACIÓN ---
-with tab2:
-    st.subheader("¿Cómo afecta el tamaño de la ronda al puntaje?")
-    st.markdown("Este gráfico combina dos variables para encontrar tendencias:")
-    st.markdown("- **Barras Verdes:** Cantidad de invitaciones (Eje Derecho).")
-    st.markdown("- **Línea Azul:** Puntaje CRS mínimo (Eje Izquierdo).")
-    
-    # Crear gráfico de doble eje con graph_objects
-    fig_combo = make_subplots(specs=[[{"secondary_y": True}]])
-
-    # 1. Barras (Invitaciones)
-    fig_combo.add_trace(
+    # 1. Barras (Cantidad Invitaciones) -> Eje Secundario (Derecha)
+    fig.add_trace(
         go.Bar(
-            x=df_filtered['drawDate'], 
-            y=df_filtered['drawSize'], 
-            name="Invitaciones Enviadas",
-            marker_color='rgba(46, 204, 113, 0.4)', # Verde translúcido
-            hoverinfo="x+y"
+            x=data['drawDate'], 
+            y=data['drawSize'], 
+            name="Invitaciones",
+            marker_color='rgba(135, 206, 250, 0.4)', # Azul claro transparente
+            hoverinfo="y+x"
         ),
-        secondary_y=True,
+        secondary_y=True
     )
 
-    # 2. Línea (Puntaje)
-    fig_combo.add_trace(
+    # 2. Línea (Puntaje CRS) -> Eje Primario (Izquierda)
+    fig.add_trace(
         go.Scatter(
-            x=df_filtered['drawDate'], 
-            y=df_filtered['drawCRS'], 
-            name="Puntaje Mínimo (CRS)",
+            x=data['drawDate'], 
+            y=data['drawCRS'], 
+            name="Puntaje CRS",
             mode='lines+markers',
-            line=dict(color='rgb(31, 119, 180)', width=3),
-            marker=dict(size=8)
+            line=dict(color='#1f77b4', width=2),
+            marker=dict(size=6)
         ),
-        secondary_y=False,
+        secondary_y=False
     )
 
-    # Línea del usuario en el gráfico comparativo también
-    if user_score:
-        fig_combo.add_hline(y=user_score, line_dash="dash", line_color="red", annotation_text="Tu Puntaje")
+    # 3. Línea de Usuario (Si existe)
+    if score_benchmark is not None:
+        fig.add_hline(
+            y=score_benchmark, 
+            line_dash="dot", 
+            line_color="red", 
+            secondary_y=False,
+            annotation_text="Tú", 
+            annotation_position="top left"
+        )
+        # Ajustar rango Y para asegurar que se vea la línea roja
+        all_scores = list(data['drawCRS']) + [score_benchmark]
+        min_y, max_y = min(all_scores), max(all_scores)
+        fig.update_yaxes(range=[min_y - 20, max_y + 20], secondary_y=False)
 
-    # Configuración de ejes y diseño
-    fig_combo.update_layout(
-        title="Relación Histórica: Volumen vs. Exigencia",
-        hovermode="x unified", # Muestra ambos datos al pasar el mouse por una fecha
-        height=500,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+    # Configuración Visual Limpia
+    fig.update_layout(
+        height=250,
+        margin=dict(l=0, r=0, t=30, b=0),
+        showlegend=False,
+        title=dict(text=f"CRS vs Cantidad", font=dict(size=12), x=0.5),
+        hovermode="x unified" # Hover unificado para ver ambos datos a la vez
     )
-
-    # Títulos de los ejes
-    fig_combo.update_yaxes(title_text="<b>Puntaje CRS</b>", secondary_y=False)
-    fig_combo.update_yaxes(title_text="<b>Cantidad de Invitaciones</b>", secondary_y=True, showgrid=False)
-
-    st.plotly_chart(fig_combo, use_container_width=True)
     
-    # Análisis de Correlación
-    # Calculamos correlación solo si hay suficientes datos
-    if len(df_filtered) > 2:
-        corr = df_filtered['drawCRS'].corr(df_filtered['drawSize'])
-        
-        st.info(f"""
-        📊 **Dato Estadístico:** La correlación actual es de **{corr:.2f}**.
-        * (Cercano a -1 significa que cuando invitan a más gente, el puntaje baja drásticamente).
-        * (Cercano a 0 significa que no hay relación clara).
-        """)
+    # Ejes
+    fig.update_yaxes(title_text=None, secondary_y=False) # Izquierda (Puntaje)
+    fig.update_yaxes(showgrid=False, secondary_y=True)   # Derecha (Cantidad) - Sin grilla para no ensuciar
 
-# --- TABLA AL FINAL (COMÚN) ---
-with st.expander("📂 Ver Tabla de Datos"):
+    return fig
+
+# --- LOGICA DE GRID (4 COLUMNAS) ---
+programs_list = []
+for name, group in df_filtered.groupby('drawName'):
+    if not group.empty:
+        programs_list.append((name, group.sort_values('drawDate')))
+
+def chunked(iterable, n):
+    for i in range(0, len(iterable), n):
+        yield iterable[i:i + n]
+
+# Iterar en bloques de 4
+for batch in chunked(programs_list, 4):
+    cols = st.columns(4)
+    
+    for i, (program_name, group_data) in enumerate(batch):
+        with cols[i]:
+            with st.container(border=True):
+                # Título del programa (Truncado si es muy largo visualmente)
+                st.markdown(f"**{program_name}**")
+                
+                # Obtener últimos datos
+                last_row = group_data.iloc[-1]
+                last_crs = last_row['drawCRS']
+                last_date = last_row['drawDate'].strftime("%Y-%m-%d")
+                
+                # --- WARNING 1: FECHA (AZUL) ---
+                st.info(f"📅 Última: {last_date}")
+
+                # --- WARNING 2: COMPARACIÓN (VERDE/ROJO/RAYA) ---
+                if user_score is not None and user_score > 0:
+                    diff = user_score - last_crs
+                    if diff >= 0:
+                        st.success(f"✅ Calificas (+{diff:.0f})")
+                    else:
+                        st.error(f"❌ Faltan {abs(diff):.0f} pts")
+                else:
+                    # Si es 0 o None, mostramos raya amarilla/neutra
+                    st.warning("➖ Comparación: --")
+
+                # --- GRÁFICO DOBLE EJE ---
+                fig = create_dual_axis_chart(group_data, program_name, user_score)
+                st.plotly_chart(fig, use_container_width=True)
+
+# Tabla al final
+with st.expander("📂 Ver Datos Tabulares"):
     st.dataframe(df_filtered[['drawDate', 'drawName', 'drawCRS', 'drawSize']], use_container_width=True)
