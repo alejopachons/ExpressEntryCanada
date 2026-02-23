@@ -43,7 +43,7 @@ if df.empty:
 
 # --- 2. RESET LOGIC ---
 # Define default values
-DEFAULT_START = date(2025, 1, 1)
+DEFAULT_START = date(2026, 1, 1)
 DEFAULT_END = date.today()
 
 def reset_filters():
@@ -231,4 +231,5 @@ for batch in chunked(programs_list, 4):
 
 # Table at the bottom
 with st.expander("📂 View Data Table"):
+
     st.dataframe(df_filtered[['drawDate', 'drawName', 'drawCRS', 'drawSize']], use_container_width=True)
