@@ -193,6 +193,9 @@ for name, group in df_filtered.groupby('drawName'):
     if not group.empty:
         programs_list.append((name, group.sort_values('drawDate')))
 
+# Ordenar las tarjetas por la fecha del último draw (de más reciente a más antigua)
+programs_list.sort(key=lambda x: x[1]['drawDate'].max(), reverse=True)
+
 def chunked(iterable, n):
     for i in range(0, len(iterable), n):
         yield iterable[i:i + n]
@@ -207,13 +210,27 @@ for batch in chunked(programs_list, 4):
                 # Program Title
                 st.markdown(f"**{program_name}**")
                 
+                # Totales del periodo
+                total_draws = len(group_data)
+                total_invites = group_data['drawSize'].sum()
+                st.caption(f"📊 Draws: {total_draws} | ✉️ Invitaciones: {total_invites:,.0f}")
+                
                 # Get last data
                 last_row = group_data.iloc[-1]
                 last_crs = last_row['drawCRS']
-                last_date = last_row['drawDate'].strftime("%Y-%m-%d")
+                last_date_obj = last_row['drawDate'].date()
+                last_date = last_date_obj.strftime("%Y-%m-%d")
                 
-                # WARNING 1: DATE
-                st.info(f"📅 Last Draw: {last_date}")
+                # Lógica de colores para la fecha
+                today = date.today()
+                days_diff = (today - last_date_obj).days
+
+                if days_diff == 0:
+                    st.markdown(f":red[📅 Last Draw: {last_date}]")
+                elif 0 < days_diff <= 5:
+                    st.markdown(f":green[📅 Last Draw: {last_date}]")
+                else:
+                    st.markdown(f":blue[📅 Last Draw: {last_date}]")
 
                 # WARNING 2: COMPARISON
                 if user_score is not None and user_score > 0:
@@ -231,5 +248,4 @@ for batch in chunked(programs_list, 4):
 
 # Table at the bottom
 with st.expander("📂 View Data Table"):
-
     st.dataframe(df_filtered[['drawDate', 'drawName', 'drawCRS', 'drawSize']], use_container_width=True)
