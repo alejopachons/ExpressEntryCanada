@@ -170,15 +170,12 @@ if df_filtered.empty:
 def create_dual_axis_chart(data, title, score_benchmark):
     data = data.copy().sort_values('drawDate')
     data['CRS_Trend'] = data['drawCRS'].rolling(window=5, min_periods=1).mean()
-    
-    # Format date to string to force categorical axis
-    x_dates = data['drawDate'].dt.strftime('%Y-%m-%d')
 
     fig = make_subplots(specs=[[{"secondary_y": True}]])
 
     fig.add_trace(
         go.Bar(
-            x=x_dates, 
+            x=data['drawDate'], 
             y=data['drawSize'], 
             name="Invitations",
             marker_color='rgba(135, 206, 250, 0.4)',
@@ -189,7 +186,7 @@ def create_dual_axis_chart(data, title, score_benchmark):
 
     fig.add_trace(
         go.Scatter(
-            x=x_dates, 
+            x=data['drawDate'], 
             y=data['CRS_Trend'], 
             name="Trend (MA 5)",
             mode='lines',
@@ -201,7 +198,7 @@ def create_dual_axis_chart(data, title, score_benchmark):
 
     fig.add_trace(
         go.Scatter(
-            x=x_dates, 
+            x=data['drawDate'], 
             y=data['drawCRS'], 
             name="CRS Score",
             mode='lines+markers',
@@ -232,8 +229,8 @@ def create_dual_axis_chart(data, title, score_benchmark):
         hovermode="x unified"
     )
     
-    # Force category type to remove hours
-    fig.update_xaxes(type='category')
+    # Eje de fecha dinámico sin mostrar horas
+    fig.update_xaxes(type='date', tickformat="%Y-%m-%d")
     fig.update_yaxes(title_text=None, secondary_y=False)
     fig.update_yaxes(showgrid=False, tickformat="s", secondary_y=True)
 
@@ -251,7 +248,6 @@ def chunked(iterable, n):
     for i in range(0, len(iterable), n):
         yield iterable[i:i + n]
 
-# Iterar en bloques de 3
 for batch in chunked(programs_list, 3):
     cols = st.columns(3)
     
