@@ -129,6 +129,10 @@ if df_filtered.empty:
 
 # Function to create dual-axis chart
 def create_dual_axis_chart(data, title, score_benchmark):
+    # Ordenar cronológicamente para calcular la media móvil correctamente
+    data = data.copy().sort_values('drawDate')
+    data['CRS_Trend'] = data['drawCRS'].rolling(window=5, min_periods=1).mean()
+
     # Create figure with secondary y-axis
     fig = make_subplots(specs=[[{"secondary_y": True}]])
 
@@ -144,7 +148,20 @@ def create_dual_axis_chart(data, title, score_benchmark):
         secondary_y=True
     )
 
-    # 2. Line (CRS Score) -> Primary Axis (Left)
+    # 2. Line (CRS Trend - Media Móvil) -> Primary Axis (Left)
+    fig.add_trace(
+        go.Scatter(
+            x=data['drawDate'], 
+            y=data['CRS_Trend'], 
+            name="Trend (MA 5)",
+            mode='lines',
+            line=dict(color='rgba(255, 127, 14, 0.8)', width=2, dash='dot'),
+            hoverinfo="skip"
+        ),
+        secondary_y=False
+    )
+
+    # 3. Line (CRS Score) -> Primary Axis (Left)
     fig.add_trace(
         go.Scatter(
             x=data['drawDate'], 
@@ -157,7 +174,7 @@ def create_dual_axis_chart(data, title, score_benchmark):
         secondary_y=False
     )
 
-    # 3. User Line (If exists)
+    # 4. User Line (If exists)
     if score_benchmark is not None:
         fig.add_hline(
             y=score_benchmark, 
@@ -183,7 +200,8 @@ def create_dual_axis_chart(data, title, score_benchmark):
     
     # Axes
     fig.update_yaxes(title_text=None, secondary_y=False) # Left
-    fig.update_yaxes(showgrid=False, secondary_y=True)   # Right
+    # tickformat="s" aplica notación K, M, etc.
+    fig.update_yaxes(showgrid=False, tickformat="s", secondary_y=True)   # Right
 
     return fig
 
