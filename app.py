@@ -138,7 +138,7 @@ def create_dual_axis_chart(data, title, score_benchmark):
             x=data['drawDate'], 
             y=data['drawSize'], 
             name="Invitations",
-            marker_color='rgba(135, 206, 250, 0.4)', # Light blue transparent
+            marker_color='rgba(135, 206, 250, 0.4)',
             hoverinfo="y+x"
         ),
         secondary_y=True
@@ -210,37 +210,27 @@ for batch in chunked(programs_list, 4):
                 # Program Title
                 st.markdown(f"**{program_name}**")
                 
-                # Totales del periodo
+                # Totales del periodo en líneas separadas
                 total_draws = len(group_data)
                 total_invites = group_data['drawSize'].sum()
-                st.caption(f"📊 Draws: {total_draws} | ✉️ Invitaciones: {total_invites:,.0f}")
+                st.caption(f"📊 Draws: {total_draws}")
+                st.caption(f"✉️ Invitaciones: {total_invites:,.0f}")
                 
                 # Get last data
                 last_row = group_data.iloc[-1]
-                last_crs = last_row['drawCRS']
                 last_date_obj = last_row['drawDate'].date()
                 last_date = last_date_obj.strftime("%Y-%m-%d")
                 
-                # Lógica de colores para la fecha
+                # Lógica de colores para la fecha con fondo
                 today = date.today()
                 days_diff = (today - last_date_obj).days
 
                 if days_diff == 0:
-                    st.markdown(f":red[📅 Last Draw: {last_date}]")
+                    st.error(f"📅 Last Draw: {last_date}")
                 elif 0 < days_diff <= 5:
-                    st.markdown(f":green[📅 Last Draw: {last_date}]")
+                    st.success(f"📅 Last Draw: {last_date}")
                 else:
-                    st.markdown(f":blue[📅 Last Draw: {last_date}]")
-
-                # WARNING 2: COMPARISON
-                if user_score is not None and user_score > 0:
-                    diff = user_score - last_crs
-                    if diff >= 0:
-                        st.success(f"✅ Eligible (+{diff:.0f})")
-                    else:
-                        st.error(f"❌ Short by {abs(diff):.0f} pts")
-                else:
-                    st.warning("➖ Comparison: --")
+                    st.info(f"📅 Last Draw: {last_date}")
 
                 # CHART
                 fig = create_dual_axis_chart(group_data, program_name, user_score)
