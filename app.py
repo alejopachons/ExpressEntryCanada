@@ -229,8 +229,8 @@ def create_dual_axis_chart(data, title, score_benchmark):
         hovermode="x unified"
     )
     
-    # Eje de fecha dinámico sin mostrar horas
-    fig.update_xaxes(type='date', tickformat="%Y-%m-%d")
+    # Formato abreviado mes-año
+    fig.update_xaxes(type='date', tickformat="%b-%Y")
     fig.update_yaxes(title_text=None, secondary_y=False)
     fig.update_yaxes(showgrid=False, tickformat="s", secondary_y=True)
 
