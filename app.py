@@ -1,3 +1,6 @@
+Aquí tienes el código actualizado. He implementado la agrupación por 3 columnas, forzado el eje X a tipo categórico para eliminar las horas, y añadido los filtros dinámicos en la barra lateral que calculan sus máximos basándose en los datos seleccionados.
+
+```python
 import streamlit as st
 import pandas as pd
 import requests
@@ -42,7 +45,6 @@ if df.empty:
     st.stop()
 
 # --- 2. RESET LOGIC ---
-# Define default values
 DEFAULT_START = date(2026, 1, 1)
 DEFAULT_END = date.today()
 
@@ -54,7 +56,6 @@ def reset_filters():
 # --- 3. SIDEBAR (CONFIGURATION) ---
 st.sidebar.header("⚙️ Configuration")
 
-# Reset Button
 if st.sidebar.button("🔄 Reset Filters", type="primary"):
     reset_filters()
 
@@ -89,7 +90,6 @@ date_range_input = st.sidebar.date_input(
     key='date_range'
 )
 
-# Tuple validation
 if len(date_range_input) == 2:
     start_date, end_date = date_range_input
 else:
@@ -112,34 +112,76 @@ with st.sidebar.expander("Select Programs", expanded=False):
     else:
         selected_programs = st.multiselect("Programs:", unique_programs, default=unique_programs)
 
-# --- 4. FILTERING ---
-mask = (
+# --- 4. STEP 1 FILTERING (DATE & PROGRAM) ---
+mask_step1 = (
     (df['drawDate'].dt.date >= start_date) & 
     (df['drawDate'].dt.date <= end_date) &
     (df['drawName'].isin(selected_programs))
 )
-df_filtered = df[mask]
+df_step1 = df[mask_step1]
 
-# --- 5. DASHBOARD ---
+# --- 5. DYNAMIC TOTALS FILTER ---
+st.sidebar.markdown("---")
+st.sidebar.subheader("📊 Totals Filter")
+
+if not df_step1.empty:
+    stats = df_step1.groupby('drawName').agg(
+        total_draws=('drawDate', 'count'),
+        total_invites=('drawSize', 'sum')
+    )
+    max_draws = int(stats['total_draws'].max())
+    max_invites = int(stats['total_invites'].max())
+else:
+    max_draws, max_invites = 1, 1
+
+safe_max_draws = max(1, max_draws)
+safe_max_invites = max(1, max_invites)
+min_inv_val = 1 if safe_max_invites > 0 else 0
+
+draws_range = st.sidebar.slider(
+    "Cantidad de Draws:", 
+    min_value=1, 
+    max_value=safe_max_draws, 
+    value=(1, safe_max_draws)
+)
+
+invites_range = st.sidebar.slider(
+    "Cantidad de Invitaciones:", 
+    min_value=min_inv_val, 
+    max_value=safe_max_invites, 
+    value=(min_inv_val, safe_max_invites)
+)
+
+# Apply totals filter
+if not df_step1.empty:
+    valid_programs = stats[
+        (stats['total_draws'] >= draws_range[0]) & (stats['total_draws'] <= draws_range[1]) &
+        (stats['total_invites'] >= invites_range[0]) & (stats['total_invites'] <= invites_range[1])
+    ].index.tolist()
+    df_filtered = df_step1[df_step1['drawName'].isin(valid_programs)]
+else:
+    df_filtered = pd.DataFrame()
+
+
+# --- 6. DASHBOARD ---
 st.title("🍁 Analysis: CRS Score vs. Invitation Volume")
 
 if df_filtered.empty:
-    st.warning("No data available for this date range.")
+    st.warning("No data available for these filter settings.")
     st.stop()
 
-# Function to create dual-axis chart
 def create_dual_axis_chart(data, title, score_benchmark):
-    # Ordenar cronológicamente para calcular la media móvil correctamente
     data = data.copy().sort_values('drawDate')
     data['CRS_Trend'] = data['drawCRS'].rolling(window=5, min_periods=1).mean()
+    
+    # Format date to string to force categorical axis
+    x_dates = data['drawDate'].dt.strftime('%Y-%m-%d')
 
-    # Create figure with secondary y-axis
     fig = make_subplots(specs=[[{"secondary_y": True}]])
 
-    # 1. Bars (Invitations) -> Secondary Axis (Right)
     fig.add_trace(
         go.Bar(
-            x=data['drawDate'], 
+            x=x_dates, 
             y=data['drawSize'], 
             name="Invitations",
             marker_color='rgba(135, 206, 250, 0.4)',
@@ -148,10 +190,9 @@ def create_dual_axis_chart(data, title, score_benchmark):
         secondary_y=True
     )
 
-    # 2. Line (CRS Trend - Media Móvil) -> Primary Axis (Left)
     fig.add_trace(
         go.Scatter(
-            x=data['drawDate'], 
+            x=x_dates, 
             y=data['CRS_Trend'], 
             name="Trend (MA 5)",
             mode='lines',
@@ -161,10 +202,9 @@ def create_dual_axis_chart(data, title, score_benchmark):
         secondary_y=False
     )
 
-    # 3. Line (CRS Score) -> Primary Axis (Left)
     fig.add_trace(
         go.Scatter(
-            x=data['drawDate'], 
+            x=x_dates, 
             y=data['drawCRS'], 
             name="CRS Score",
             mode='lines+markers',
@@ -174,7 +214,6 @@ def create_dual_axis_chart(data, title, score_benchmark):
         secondary_y=False
     )
 
-    # 4. User Line (If exists)
     if score_benchmark is not None:
         fig.add_hline(
             y=score_benchmark, 
@@ -184,12 +223,10 @@ def create_dual_axis_chart(data, title, score_benchmark):
             annotation_text="You", 
             annotation_position="top left"
         )
-        # Adjust Y range
         all_scores = list(data['drawCRS']) + [score_benchmark]
         min_y, max_y = min(all_scores), max(all_scores)
         fig.update_yaxes(range=[min_y - 20, max_y + 20], secondary_y=False)
 
-    # Clean Visual Config
     fig.update_layout(
         height=250,
         margin=dict(l=0, r=0, t=30, b=0),
@@ -198,48 +235,43 @@ def create_dual_axis_chart(data, title, score_benchmark):
         hovermode="x unified"
     )
     
-    # Axes
-    fig.update_yaxes(title_text=None, secondary_y=False) # Left
-    # tickformat="s" aplica notación K, M, etc.
-    fig.update_yaxes(showgrid=False, tickformat="s", secondary_y=True)   # Right
+    # Force category type to remove hours
+    fig.update_xaxes(type='category')
+    fig.update_yaxes(title_text=None, secondary_y=False)
+    fig.update_yaxes(showgrid=False, tickformat="s", secondary_y=True)
 
     return fig
 
-# --- GRID LOGIC (4 COLUMNS) ---
+# --- GRID LOGIC (3 COLUMNS) ---
 programs_list = []
 for name, group in df_filtered.groupby('drawName'):
     if not group.empty:
         programs_list.append((name, group.sort_values('drawDate')))
 
-# Ordenar las tarjetas por la fecha del último draw (de más reciente a más antigua)
 programs_list.sort(key=lambda x: x[1]['drawDate'].max(), reverse=True)
 
 def chunked(iterable, n):
     for i in range(0, len(iterable), n):
         yield iterable[i:i + n]
 
-# Iterate in batches of 4
-for batch in chunked(programs_list, 4):
-    cols = st.columns(4)
+# Iterar en bloques de 3
+for batch in chunked(programs_list, 3):
+    cols = st.columns(3)
     
     for i, (program_name, group_data) in enumerate(batch):
         with cols[i]:
             with st.container(border=True):
-                # Program Title
                 st.markdown(f"**{program_name}**")
                 
-                # Totales del periodo en líneas separadas
                 total_draws = len(group_data)
                 total_invites = group_data['drawSize'].sum()
                 st.caption(f"📊 Draws: {total_draws}")
                 st.caption(f"✉️ Invitaciones: {total_invites:,.0f}")
                 
-                # Get last data
                 last_row = group_data.iloc[-1]
                 last_date_obj = last_row['drawDate'].date()
                 last_date = last_date_obj.strftime("%Y-%m-%d")
                 
-                # Lógica de colores para la fecha con fondo
                 today = date.today()
                 days_diff = (today - last_date_obj).days
 
@@ -250,10 +282,10 @@ for batch in chunked(programs_list, 4):
                 else:
                     st.info(f"📅 Last Draw: {last_date}")
 
-                # CHART
                 fig = create_dual_axis_chart(group_data, program_name, user_score)
                 st.plotly_chart(fig, use_container_width=True)
 
-# Table at the bottom
 with st.expander("📂 View Data Table"):
     st.dataframe(df_filtered[['drawDate', 'drawName', 'drawCRS', 'drawSize']], use_container_width=True)
+
+```
